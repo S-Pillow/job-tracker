@@ -106,6 +106,9 @@ model Task {
   caseAId String?
   caseBId String?
 
+  // Attribution (optional — no login required, voluntary)
+  createdBy String?
+
   // Lifecycle timestamps
   completedAt DateTime?
 
@@ -138,5 +141,28 @@ model Step {
   isStopWarning  Boolean @default(false)
 
   @@index([taskId, order])
+}
+
+/// Append-only event log — no FK to Task/Step so entries survive record deletion
+model AuditLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  action    String   // TASK_CREATED | STEP_TOGGLED | TASK_COMPLETED | TASK_CLOSED | TASK_REOPENED | TASK_DELETED
+
+  // Plain string references — no cascade delete
+  taskId    String?
+  stepId    String?
+
+  // Snapshot of identifiers captured at event time
+  caseNumber    String?
+  registrarName String?
+
+  oldValue  String?
+  newValue  String?
+  note      String?
+
+  @@index([taskId])
+  @@index([createdAt])
 }
 

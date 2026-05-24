@@ -195,6 +195,17 @@ export function NewTerminationDialog({ open, onOpenChange }: Props) {
               </label>
             </div>
 
+            <div>
+              <label className="block text-xs font-medium text-zinc-600 mb-1">
+                Your name <span className="font-normal text-zinc-400">(optional)</span>
+              </label>
+              <input
+                {...register('createdBy')}
+                placeholder="e.g. Jane Smith"
+                className="w-full px-3 py-2 rounded-md border border-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400 placeholder:text-zinc-400"
+              />
+            </div>
+
             {serverError && (
               <div className="flex items-start gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
                 <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />

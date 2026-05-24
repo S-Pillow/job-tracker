@@ -506,6 +506,7 @@ export type TaskCreateInput = {
   taskType: $Enums.TaskType
   status?: $Enums.TaskStatus
   caseNumber: string
+  createdBy?: string | null
   registrarName: string
   ianaId: string
   tldScope?: string | null
@@ -538,6 +539,7 @@ export type TaskUncheckedCreateInput = {
   taskType: $Enums.TaskType
   status?: $Enums.TaskStatus
   caseNumber: string
+  createdBy?: string | null
   registrarName: string
   ianaId: string
   tldScope?: string | null
@@ -1317,6 +1319,9 @@ export type TaskSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   cnnicTwnicNotified?: boolean
   caseAId?: boolean
   caseBId?: boolean
+  createdBy?: boolean
+  status?: boolean
+  completedAt?: boolean
   templateId?: boolean
   template?: boolean | Prisma.Task$templateArgs<ExtArgs>
   steps?: boolean | Prisma.Task$stepsArgs<ExtArgs>
@@ -1443,6 +1448,7 @@ export type $TaskPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     caseNumber: string
     registrarName: string
     ianaId: string
+    createdBy: string | null
     tldScope: string | null
     hasGatewayCnTw: boolean
     terminationType: string | null

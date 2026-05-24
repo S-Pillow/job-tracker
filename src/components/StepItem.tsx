@@ -10,9 +10,11 @@ interface Props {
   isCurrent: boolean;
   /** Title of the gate step that is blocking this step, or null if not locked. */
   lockedByTitle?: string | null;
+  /** When true the parent task is closed; all step toggles are disabled. */
+  isTaskCompleted?: boolean;
 }
 
-export function StepItem({ step, isCurrent, lockedByTitle = null }: Props) {
+export function StepItem({ step, isCurrent, lockedByTitle = null, isTaskCompleted = false }: Props) {
   const isLocked = lockedByTitle !== null;
 
   const [isPending, startTransition] = useTransition();
@@ -22,9 +24,8 @@ export function StepItem({ step, isCurrent, lockedByTitle = null }: Props) {
   const isComplete = optimisticStatus === 'COMPLETE';
   const isNA = optimisticStatus === 'NA';
 
-  // A completed step is always interactable — the lock only prevents checking
-  // an incomplete step. This avoids the checked+locked visual contradiction.
-  const isDisabled = isPending || isNA || (isLocked && !isComplete);
+  // Disable when: saving, N/A, gate-locked (incomplete only), or parent task closed
+  const isDisabled = isPending || isNA || isTaskCompleted || (isLocked && !isComplete);
 
   function handleToggle() {
     if (isDisabled) return;
@@ -40,8 +41,9 @@ export function StepItem({ step, isCurrent, lockedByTitle = null }: Props) {
     });
   }
 
-  // Aria label uses the actual gate step title, not a hardcoded step number.
-  const ariaLabel = isLocked && !isComplete
+  const ariaLabel = isTaskCompleted
+    ? 'Case is closed — reopen to make changes'
+    : isLocked && !isComplete
     ? `Locked — complete "${lockedByTitle}" first`
     : isComplete
     ? 'Mark incomplete'

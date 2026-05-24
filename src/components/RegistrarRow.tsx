@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Trash2, RotateCcw } from 'lucide-react';
 import { StepList } from './StepList';
-import { deleteTask } from '@/app/actions';
+import { deleteTask, reopenTask } from '@/app/actions';
 import type { TaskData } from '@/lib/types';
 
 interface Props {
@@ -22,8 +22,11 @@ export function RegistrarRow({ task, isExpanded, onToggle }: Props) {
   const progressPct = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
   const isAllDone = totalCount > 0 && completedCount === totalCount;
 
+  const isTaskCompleted = task.completedAt !== null;
+
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, startDeleteTransition] = useTransition();
+  const [isReopening, startReopenTransition] = useTransition();
 
   function handleDeleteClick(e: React.MouseEvent) {
     e.stopPropagation();
@@ -40,6 +43,13 @@ export function RegistrarRow({ task, isExpanded, onToggle }: Props) {
   function handleCancel(e: React.MouseEvent) {
     e.stopPropagation();
     setConfirmDelete(false);
+  }
+
+  function handleReopen(e: React.MouseEvent) {
+    e.stopPropagation();
+    startReopenTransition(async () => {
+      await reopenTask(task.id);
+    });
   }
 
   return (
@@ -105,8 +115,23 @@ export function RegistrarRow({ task, isExpanded, onToggle }: Props) {
           </span>
         </button>
 
-        {/* Delete control — floats on the right, outside the expand button */}
+        {/* Action controls — floats on the right */}
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+          {/* Reopen button — only for completed cases */}
+          {isTaskCompleted && !confirmDelete && (
+            <button
+              type="button"
+              onClick={handleReopen}
+              disabled={isReopening}
+              aria-label="Reopen case"
+              className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-zinc-500 border border-zinc-200 hover:bg-zinc-50 hover:text-zinc-700 disabled:opacity-50 transition-colors"
+            >
+              <RotateCcw size={11} />
+              {isReopening ? 'Reopening…' : 'Reopen'}
+            </button>
+          )}
+
+          {/* Delete control */}
           {confirmDelete ? (
             <>
               <span className="text-xs text-zinc-500 whitespace-nowrap">Delete?</span>
@@ -141,7 +166,7 @@ export function RegistrarRow({ task, isExpanded, onToggle }: Props) {
 
       {isExpanded && (
         <div className="border-t border-zinc-100">
-          <StepList steps={task.steps} taskId={task.id} />
+          <StepList steps={task.steps} taskId={task.id} isTaskCompleted={isTaskCompleted} />
         </div>
       )}
     </div>

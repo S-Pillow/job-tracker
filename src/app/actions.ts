@@ -29,7 +29,7 @@ function deriveTaskStatus(
   return 'NOT_STARTED';
 }
 
-// ─── Unique constraint error helper ─────────────────────────────────────────
+// ─── Unique constraint helper ────────────────────────────────────────────────
 
 function isDuplicateCaseNumber(err: unknown): boolean {
   if (err instanceof Error) {
@@ -43,26 +43,85 @@ function isDuplicateCaseNumber(err: unknown): boolean {
   return false;
 }
 
-// ─── Step status update (P5: wrapped in transaction) ─────────────────────────
+// ─── A3: Audit log helper ────────────────────────────────────────────────────
+
+async function writeAuditLog(entry: {
+  action: string;
+  taskId?: string | null;
+  stepId?: string | null;
+  caseNumber?: string | null;
+  registrarName?: string | null;
+  oldValue?: string | null;
+  newValue?: string | null;
+  note?: string | null;
+}) {
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+  try {
+    await prisma.$executeRaw`
+      INSERT INTO "AuditLog" ("id","createdAt","action","taskId","stepId","caseNumber","registrarName","oldValue","newValue","note")
+      VALUES (
+        ${id}, ${now}, ${entry.action},
+        ${entry.taskId ?? null}, ${entry.stepId ?? null},
+        ${entry.caseNumber ?? null}, ${entry.registrarName ?? null},
+        ${entry.oldValue ?? null}, ${entry.newValue ?? null},
+        ${entry.note ?? null}
+      )
+    `;
+  } catch {
+    // Audit log failures are non-fatal — log to stderr but never block the user action
+    console.error('[AuditLog] write failed for action:', entry.action);
+  }
+}
+
+// ─── Step status update (A1 guard + A3 audit + P5 transaction) ───────────────
 
 export async function updateStepStatus(
   stepId: string,
   status: 'COMPLETE' | 'NOT_STARTED',
 ) {
+  let auditTaskId = '';
+  let auditCaseNumber = '';
+  let auditRegistrarName = '';
+  let auditOldStatus = '';
+
   await prisma.$transaction(async (tx) => {
-    // Update step + its own completedAt in one write
-    const step = await tx.step.update({
+    // Fetch step and parent task together so we can check completedAt (A1 guard)
+    const stepWithTask = await tx.step.findUnique({
+      where: { id: stepId },
+      select: {
+        taskId: true,
+        status: true,
+        task: { select: { completedAt: true, caseNumber: true, registrarName: true } },
+      },
+    });
+
+    if (!stepWithTask) throw new Error('Step not found.');
+
+    // A1: Block step changes on completed tasks
+    if (stepWithTask.task.completedAt) {
+      throw new Error(
+        'This case is already complete. Use "Reopen Case" to make changes.',
+      );
+    }
+
+    auditTaskId = stepWithTask.taskId;
+    auditCaseNumber = stepWithTask.task.caseNumber;
+    auditRegistrarName = stepWithTask.task.registrarName;
+    auditOldStatus = stepWithTask.status;
+
+    // Update step + its completedAt timestamp
+    await tx.step.update({
       where: { id: stepId },
       data: {
         status,
         completedAt: status === 'COMPLETE' ? new Date() : null,
       },
-      select: { taskId: true },
     });
 
-    // Read all sibling steps to derive the task-level status
+    // Re-read all siblings to derive task-level status
     const allSteps = await tx.step.findMany({
-      where: { taskId: step.taskId },
+      where: { taskId: stepWithTask.taskId },
       select: { status: true, isGate: true, order: true },
     });
 
@@ -73,13 +132,27 @@ export async function updateStepStatus(
     const taskStatus = deriveTaskStatus(allSteps);
 
     await tx.task.update({
-      where: { id: step.taskId },
+      where: { id: stepWithTask.taskId },
       data: {
         status: taskStatus,
         completedAt: isNowComplete ? new Date() : null,
       },
     });
   });
+
+  // A3: Write audit log after transaction commits
+  if (auditTaskId) {
+    const action = status === 'COMPLETE' ? 'STEP_COMPLETED' : 'STEP_REVERTED';
+    await writeAuditLog({
+      action,
+      taskId: auditTaskId,
+      stepId,
+      caseNumber: auditCaseNumber,
+      registrarName: auditRegistrarName,
+      oldValue: auditOldStatus,
+      newValue: status,
+    });
+  }
 
   revalidatePath('/');
 }
@@ -120,14 +193,17 @@ export async function createTerminationTask(data: NewTerminationFormData) {
     throw new Error('No default TERMINATION template found. Run db:seed first.');
   }
 
+  let newTaskId: string | null = null;
+
   try {
-    await prisma.task.create({
+    const newTask = await prisma.task.create({
       data: {
         taskType: 'TERMINATION',
         status: 'NOT_STARTED',
         registrarName: data.registrarName,
         ianaId: data.ianaId,
         caseNumber: data.caseNumber,
+        createdBy: (data as any).createdBy || null,
         terminationType: data.terminationType || null,
         terminationEffectiveDate: data.terminationEffectiveDate
           ? new Date(data.terminationEffectiveDate)
@@ -151,13 +227,24 @@ export async function createTerminationTask(data: NewTerminationFormData) {
           })),
         },
       },
+      select: { id: true },
     });
+    newTaskId = newTask.id;
   } catch (err) {
     if (isDuplicateCaseNumber(err)) {
       throw new Error('A case with this case number already exists.');
     }
     throw err;
   }
+
+  // A3: Audit log
+  await writeAuditLog({
+    action: 'TASK_CREATED',
+    taskId: newTaskId,
+    caseNumber: data.caseNumber,
+    registrarName: data.registrarName,
+    note: (data as any).createdBy ? `Created by ${(data as any).createdBy}` : null,
+  });
 
   revalidatePath('/');
 }
@@ -170,23 +257,36 @@ export async function createSimpleTask(
 ) {
   simpleTaskSchema.parse(data);
 
+  let newTaskId: string | null = null;
+
   try {
-    await prisma.task.create({
+    const newTask = await prisma.task.create({
       data: {
         taskType,
         status: 'NOT_STARTED',
         registrarName: data.registrarName,
         ianaId: data.ianaId,
         caseNumber: data.caseNumber,
+        createdBy: (data as any).createdBy || null,
         hasGatewayCnTw: false,
       },
+      select: { id: true },
     });
+    newTaskId = newTask.id;
   } catch (err) {
     if (isDuplicateCaseNumber(err)) {
       throw new Error('A case with this case number already exists.');
     }
     throw err;
   }
+
+  await writeAuditLog({
+    action: 'TASK_CREATED',
+    taskId: newTaskId,
+    caseNumber: data.caseNumber,
+    registrarName: data.registrarName,
+    note: (data as any).createdBy ? `Created by ${(data as any).createdBy}` : null,
+  });
 
   revalidatePath('/');
 }
@@ -201,20 +301,77 @@ export async function closeTask(taskId: string) {
     );
   }
 
-  await prisma.task.update({
+  const task = await prisma.task.update({
     where: { id: taskId },
-    data: {
-      status: 'COMPLETED',
-      completedAt: new Date(),
-    },
+    data: { status: 'COMPLETED', completedAt: new Date() },
+    select: { caseNumber: true, registrarName: true },
+  });
+
+  await writeAuditLog({
+    action: 'TASK_CLOSED',
+    taskId,
+    caseNumber: task.caseNumber,
+    registrarName: task.registrarName,
   });
 
   revalidatePath('/');
 }
 
-// ─── Delete task ─────────────────────────────────────────────────────────────
+// ─── A4: Reopen a completed task ─────────────────────────────────────────────
+
+export async function reopenTask(taskId: string) {
+  const existing = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: { completedAt: true, caseNumber: true, registrarName: true },
+  });
+
+  if (!existing) throw new Error('Task not found.');
+  if (!existing.completedAt) throw new Error('This case is not marked as complete.');
+
+  await prisma.task.update({
+    where: { id: taskId },
+    data: {
+      completedAt: null,
+      status: 'IN_PROGRESS', // Explicitly set — avoid re-deriving to COMPLETED
+    },
+  });
+
+  await writeAuditLog({
+    action: 'TASK_REOPENED',
+    taskId,
+    caseNumber: existing.caseNumber,
+    registrarName: existing.registrarName,
+  });
+
+  revalidatePath('/');
+}
+
+// ─── A2: Delete task (guards against completed case deletion) ─────────────────
 
 export async function deleteTask(taskId: string) {
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: { completedAt: true, caseNumber: true, registrarName: true, taskType: true },
+  });
+
+  if (!task) return; // Already deleted
+
+  // A2: Block deletion of completed cases
+  if (task.completedAt) {
+    throw new Error(
+      'Completed cases cannot be deleted. Reopen the case first if you need to remove it.',
+    );
+  }
+
+  // A3: Write audit log before deletion (so we preserve the identifiers)
+  await writeAuditLog({
+    action: 'TASK_DELETED',
+    taskId,
+    caseNumber: task.caseNumber,
+    registrarName: task.registrarName,
+    note: `taskType=${task.taskType}`,
+  });
+
   await prisma.task.delete({ where: { id: taskId } });
   revalidatePath('/');
 }

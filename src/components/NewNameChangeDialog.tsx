@@ -23,7 +23,7 @@ export function NewNameChangeDialog({ open, onOpenChange }: Props) {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<FormValues>({ resolver: zodResolver(simpleTaskSchema) });
+  } = useForm<FormValues>({ resolver: zodResolver(simpleTaskSchema) as any });
 
   function onSubmit(values: FormValues) {
     setServerError(null);
@@ -94,6 +94,17 @@ export function NewNameChangeDialog({ open, onOpenChange }: Props) {
                   <p className="text-xs text-red-600 mt-1">{errors.caseNumber.message}</p>
                 )}
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-zinc-600 mb-1">
+                Your name <span className="font-normal text-zinc-400">(optional)</span>
+              </label>
+              <input
+                {...register('createdBy')}
+                placeholder="e.g. Jane Smith"
+                className="w-full px-3 py-2 rounded-md border border-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400 placeholder:text-zinc-400"
+              />
             </div>
 
             {serverError && (
