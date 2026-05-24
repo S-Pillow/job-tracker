@@ -1,7 +1,9 @@
 'use client';
 
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { useState, useTransition } from 'react';
+import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
 import { StepList } from './StepList';
+import { deleteTask } from '@/app/actions';
 import type { TaskData } from '@/lib/types';
 
 interface Props {
@@ -20,63 +22,122 @@ export function RegistrarRow({ task, isExpanded, onToggle }: Props) {
   const progressPct = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
   const isAllDone = totalCount > 0 && completedCount === totalCount;
 
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDeleting, startDeleteTransition] = useTransition();
+
+  function handleDeleteClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    setConfirmDelete(true);
+  }
+
+  function handleConfirm(e: React.MouseEvent) {
+    e.stopPropagation();
+    startDeleteTransition(async () => {
+      await deleteTask(task.id);
+    });
+  }
+
+  function handleCancel(e: React.MouseEvent) {
+    e.stopPropagation();
+    setConfirmDelete(false);
+  }
+
   return (
-    <div className="border border-zinc-200 rounded-lg overflow-hidden bg-white shadow-sm">
-      <button
-        type="button"
-        onClick={onToggle}
-        className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-zinc-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset"
-      >
-        {/* Expand/collapse chevron */}
-        <span className="text-zinc-400 flex-shrink-0">
-          {isExpanded ? (
-            <ChevronDown size={16} />
-          ) : (
-            <ChevronRight size={16} />
-          )}
-        </span>
-
-        {/* Registrar name */}
-        <span className="font-semibold text-zinc-900 flex-1 min-w-0 truncate">
-          {task.registrarName}
-        </span>
-
-        {/* IANA ID chip */}
-        <span className="hidden sm:inline text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded font-mono flex-shrink-0">
-          IANA {task.ianaId}
-        </span>
-
-        {/* Case number */}
-        <span className="hidden md:inline text-sm text-zinc-500 flex-shrink-0">
-          {task.caseNumber}
-        </span>
-
-        {/* Progress bar + fraction */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <div className="w-24 h-1.5 bg-zinc-100 rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-300 ${
-                isAllDone ? 'bg-emerald-500' : 'bg-blue-500'
-              }`}
-              style={{ width: `${progressPct}%` }}
-            />
-          </div>
-          <span className="text-xs text-zinc-500 tabular-nums whitespace-nowrap">
-            {completedCount}/{totalCount}
+    <div className="group border border-zinc-200 rounded-lg overflow-hidden bg-white shadow-sm">
+      <div className="relative">
+        <button
+          type="button"
+          onClick={onToggle}
+          className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-zinc-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset pr-24"
+        >
+          {/* Expand/collapse chevron */}
+          <span className="text-zinc-400 flex-shrink-0">
+            {isExpanded ? (
+              <ChevronDown size={16} />
+            ) : (
+              <ChevronRight size={16} />
+            )}
           </span>
-        </div>
 
-        {/* Current step label — shows step number only, no title (avoids truncation) */}
-        <span className="hidden lg:inline text-xs flex-shrink-0 whitespace-nowrap">
-          {isAllDone ? (
-            <span className="text-emerald-600 font-medium">Complete</span>
-          ) : currentStep ? (
-            <span className="text-zinc-500">Step {currentStep.order} of {totalCount}</span>
+          {/* Registrar name */}
+          <span className="font-semibold text-zinc-900 flex-1 min-w-0 truncate">
+            {task.registrarName}
+          </span>
+
+          {/* IANA ID chip */}
+          <span className="hidden sm:inline text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded font-mono flex-shrink-0">
+            IANA {task.ianaId}
+          </span>
+
+          {/* Case number */}
+          <span className="hidden md:inline text-sm text-zinc-500 flex-shrink-0">
+            {task.caseNumber}
+          </span>
+
+          {/* Progress bar + fraction */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="w-24 h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  isAllDone ? 'bg-emerald-500' : 'bg-blue-500'
+                }`}
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+            <span className="text-xs text-zinc-500 tabular-nums whitespace-nowrap">
+              {completedCount}/{totalCount}
+            </span>
+          </div>
+
+          {/* Current step label / completed date */}
+          <span className="hidden lg:inline text-xs flex-shrink-0 whitespace-nowrap">
+            {isAllDone && task.completedAt ? (
+              <span className="text-emerald-600 font-medium">
+                Completed {task.completedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </span>
+            ) : isAllDone ? (
+              <span className="text-emerald-600 font-medium">Complete</span>
+            ) : currentStep ? (
+              <span className="text-zinc-500">Step {currentStep.order} of {totalCount}</span>
+            ) : (
+              <span className="text-zinc-400">Not started</span>
+            )}
+          </span>
+        </button>
+
+        {/* Delete control — floats on the right, outside the expand button */}
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+          {confirmDelete ? (
+            <>
+              <span className="text-xs text-zinc-500 whitespace-nowrap">Delete?</span>
+              <button
+                type="button"
+                onClick={handleConfirm}
+                disabled={isDeleting}
+                className="text-xs px-2 py-1 rounded bg-red-600 text-white font-medium hover:bg-red-700 disabled:opacity-50 transition-colors"
+              >
+                {isDeleting ? '…' : 'Yes'}
+              </button>
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="text-xs px-2 py-1 rounded border border-zinc-200 text-zinc-600 hover:bg-zinc-50 transition-colors"
+              >
+                No
+              </button>
+            </>
           ) : (
-            <span className="text-zinc-400">Not started</span>
+            <button
+              type="button"
+              onClick={handleDeleteClick}
+              aria-label="Delete task"
+              className="p-1.5 rounded text-zinc-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+            >
+              <Trash2 size={14} />
+            </button>
           )}
-        </span>
-      </button>
+        </div>
+      </div>
 
       {isExpanded && (
         <div className="border-t border-zinc-100">

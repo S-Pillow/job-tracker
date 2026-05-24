@@ -18,6 +18,7 @@ export type TaskType = 'TERMINATION' | 'NAME_CHANGE' | 'ASSIGNMENT';
 export type TaskData = {
   id: string;
   createdAt: Date;
+  completedAt: Date | null;
   taskType: TaskType;
   registrarName: string;
   ianaId: string;

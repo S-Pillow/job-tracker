@@ -584,6 +584,7 @@ export type TaskUpdateInput = {
   cnnicTwnicNotified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   caseAId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   caseBId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   template?: Prisma.TemplateUpdateOneWithoutTasksNestedInput
   steps?: Prisma.StepUpdateManyWithoutTaskNestedInput
 }
@@ -615,6 +616,7 @@ export type TaskUncheckedUpdateInput = {
   cnnicTwnicNotified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   caseAId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   caseBId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   templateId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steps?: Prisma.StepUncheckedUpdateManyWithoutTaskNestedInput
 }
@@ -1451,6 +1453,7 @@ export type $TaskPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     cnnicTwnicNotified: boolean
     caseAId: string | null
     caseBId: string | null
+    completedAt: Date | null
     templateId: string | null
   }, ExtArgs["result"]["task"]>
   composites: {}

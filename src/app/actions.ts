@@ -8,10 +8,27 @@ export async function updateStepStatus(
   stepId: string,
   status: 'COMPLETE' | 'NOT_STARTED',
 ) {
-  await prisma.step.update({
+  const step = await prisma.step.update({
     where: { id: stepId },
     data: { status },
+    select: { taskId: true },
   });
+
+  // Recompute completedAt for the parent task
+  const allSteps = await prisma.step.findMany({
+    where: { taskId: step.taskId },
+    select: { status: true },
+  });
+
+  const activeSteps = allSteps.filter((s) => s.status !== 'NA');
+  const isNowComplete =
+    activeSteps.length > 0 && activeSteps.every((s) => s.status === 'COMPLETE');
+
+  await prisma.task.update({
+    where: { id: step.taskId },
+    data: { completedAt: isNowComplete ? new Date() : null },
+  });
+
   revalidatePath('/');
 }
 

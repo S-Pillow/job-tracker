@@ -11,6 +11,7 @@ export default async function Home() {
   const tasks: TaskData[] = raw.map((t) => ({
     id: t.id,
     createdAt: t.createdAt,
+    completedAt: t.completedAt ?? null,
     taskType: t.taskType as TaskData['taskType'],
     registrarName: t.registrarName,
     ianaId: t.ianaId,

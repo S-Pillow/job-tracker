@@ -97,6 +97,9 @@ model Task {
   caseAId String?
   caseBId String?
 
+  // Lifecycle timestamps
+  completedAt DateTime?
+
   // Derived / helper fields
   templateId String?  // template from which task was created
   template   Template? @relation(fields: [templateId], references: [id])
