@@ -166,6 +166,26 @@ export function RegistrarRow({ task, isExpanded, onToggle }: Props) {
 
       {isExpanded && (
         <div className="border-t border-zinc-100">
+          {/* Case metadata strip — only shown when there is extra detail to display */}
+          {(task.gainingRegistrarName || task.gainingRegistrarIanaId) && (
+            <div className="px-5 py-3 bg-zinc-50 border-b border-zinc-100 flex flex-wrap gap-x-6 gap-y-1.5 text-xs text-zinc-600">
+              <span className="font-semibold text-zinc-400 uppercase tracking-wider self-center">
+                Gaining Registrar
+              </span>
+              {task.gainingRegistrarName && (
+                <span>
+                  <span className="text-zinc-400">Name:&nbsp;</span>
+                  <span className="text-zinc-700 font-medium">{task.gainingRegistrarName}</span>
+                </span>
+              )}
+              {task.gainingRegistrarIanaId && (
+                <span>
+                  <span className="text-zinc-400">IANA ID:&nbsp;</span>
+                  <span className="text-zinc-700 font-mono font-medium">{task.gainingRegistrarIanaId}</span>
+                </span>
+              )}
+            </div>
+          )}
           <StepList steps={task.steps} taskId={task.id} isTaskCompleted={isTaskCompleted} />
         </div>
       )}
