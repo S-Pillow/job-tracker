@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
-import { terminationTaskSchema, simpleTaskSchema } from '@/lib/validation';
+import { terminationTaskSchema, simpleTaskSchema, editTaskSchema } from '@/lib/validation';
+import type { EditTaskInput } from '@/lib/validation';
 import { mapTaskData, STEPS_INCLUDE } from '@/lib/mappers';
 import type { NewTerminationFormData, NewSimpleTaskFormData, TaskData, TaskType } from '@/lib/types';
 
@@ -341,6 +342,56 @@ export async function reopenTask(taskId: string) {
     taskId,
     caseNumber: existing.caseNumber,
     registrarName: existing.registrarName,
+  });
+
+  revalidatePath('/');
+}
+
+// ─── Edit task metadata (checklist progress is never touched) ────────────────
+
+export async function updateTask(taskId: string, data: EditTaskInput) {
+  const parsed = editTaskSchema.safeParse(data);
+  if (!parsed.success) {
+    const firstError = (parsed as { success: false; error: { issues: Array<{ message: string }> } }).error.issues[0];
+    throw new Error(firstError?.message ?? 'Validation failed.');
+  }
+  const v = parsed.data;
+
+  let updatedCaseNumber = '';
+  let updatedRegistrarName = '';
+
+  try {
+    const updated = await prisma.task.update({
+      where: { id: taskId },
+      data: {
+        registrarName: v.registrarName,
+        ianaId: v.ianaId,
+        caseNumber: v.caseNumber,
+        terminationType: v.terminationType || null,
+        terminationEffectiveDate: v.terminationEffectiveDate
+          ? new Date(v.terminationEffectiveDate)
+          : null,
+        gainingRegistrarName: v.gainingRegistrarName || null,
+        gainingRegistrarIanaId: v.gainingRegistrarIanaId || null,
+        icannNoticeDate: v.icannNoticeDate ? new Date(v.icannNoticeDate) : null,
+        hasGatewayCnTw: v.hasGatewayCnTw ?? false,
+      },
+      select: { caseNumber: true, registrarName: true },
+    });
+    updatedCaseNumber = updated.caseNumber;
+    updatedRegistrarName = updated.registrarName;
+  } catch (err) {
+    if (isDuplicateCaseNumber(err)) {
+      throw new Error('A case with this case number already exists.');
+    }
+    throw err;
+  }
+
+  await writeAuditLog({
+    action: 'TASK_EDITED',
+    taskId,
+    caseNumber: updatedCaseNumber,
+    registrarName: updatedRegistrarName,
   });
 
   revalidatePath('/');

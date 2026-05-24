@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { ChevronDown, ChevronRight, Trash2, RotateCcw } from 'lucide-react';
 import { StepList } from './StepList';
+import { EditTaskDialog } from './EditTaskDialog';
 import { deleteTask, reopenTask } from '@/app/actions';
 import type { TaskData } from '@/lib/types';
 
@@ -166,6 +167,11 @@ export function RegistrarRow({ task, isExpanded, onToggle }: Props) {
 
       {isExpanded && (
         <div className="border-t border-zinc-100">
+          {/* Expanded action bar — Edit sits here, away from the crowded row header */}
+          <div className="flex items-center justify-end px-4 py-2 border-b border-zinc-100 bg-white">
+            <EditTaskDialog task={task} />
+          </div>
+
           {/* Case metadata strip — only shown when there is extra detail to display */}
           {(task.gainingRegistrarName || task.gainingRegistrarIanaId) && (
             <div className="px-5 py-3 bg-zinc-50 border-b border-zinc-100 flex flex-wrap gap-x-6 gap-y-1.5 text-xs text-zinc-600">
