@@ -1,12 +1,12 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { X } from 'lucide-react';
+import { X, AlertCircle } from 'lucide-react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { createTerminationTask } from '@/app/actions';
+import { terminationTaskSchema, type TerminationTaskInput } from '@/lib/validation';
 import type { NewTerminationFormData } from '@/lib/types';
 
 const TERMINATION_TYPES = [
@@ -15,19 +15,7 @@ const TERMINATION_TYPES = [
   'Terminated for Cause',
 ] as const;
 
-const schema = z.object({
-  registrarName: z.string().min(1, 'Required'),
-  ianaId: z.string().min(1, 'Required'),
-  caseNumber: z.string().min(1, 'Required'),
-  terminationType: z.string().optional().default(''),
-  terminationEffectiveDate: z.string().optional().default(''),
-  gainingRegistrarName: z.string().optional().default(''),
-  gainingRegistrarIanaId: z.string().optional().default(''),
-  icannNoticeDate: z.string().optional().default(''),
-  hasGatewayCnTw: z.boolean().default(false),
-});
-
-type FormValues = z.infer<typeof schema>;
+type FormValues = TerminationTaskInput;
 
 interface Props {
   open: boolean;
@@ -62,6 +50,7 @@ const inputCls =
 
 export function NewTerminationDialog({ open, onOpenChange }: Props) {
   const [isPending, startTransition] = useTransition();
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const {
     register,
@@ -69,8 +58,8 @@ export function NewTerminationDialog({ open, onOpenChange }: Props) {
     reset,
     control,
     formState: { errors },
-  } = useForm({
-    resolver: zodResolver(schema),
+  } = useForm<FormValues>({
+    resolver: zodResolver(terminationTaskSchema) as any,
     defaultValues: { hasGatewayCnTw: false, terminationType: '' },
   });
 
@@ -78,10 +67,15 @@ export function NewTerminationDialog({ open, onOpenChange }: Props) {
   const showIcannNoticeDate = terminationType === 'ICANN Termination';
 
   function onSubmit(values: FormValues) {
+    setServerError(null);
     startTransition(async () => {
-      await createTerminationTask(values as NewTerminationFormData);
-      reset();
-      onOpenChange(false);
+      try {
+        await createTerminationTask(values as NewTerminationFormData);
+        reset();
+        onOpenChange(false);
+      } catch (err) {
+        setServerError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+      }
     });
   }
 
@@ -200,6 +194,13 @@ export function NewTerminationDialog({ open, onOpenChange }: Props) {
                 Has Gateway CN/TW scope (enables conditional step 8)
               </label>
             </div>
+
+            {serverError && (
+              <div className="flex items-start gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+                <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
+                {serverError}
+              </div>
+            )}
 
             <div className="flex gap-3 pt-2">
               <Dialog.Close asChild>

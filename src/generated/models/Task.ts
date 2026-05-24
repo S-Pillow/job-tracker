@@ -500,6 +500,7 @@ export type TaskCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   taskType: $Enums.TaskType
+  status?: $Enums.TaskStatus
   caseNumber: string
   registrarName: string
   ianaId: string
@@ -531,6 +532,7 @@ export type TaskUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   taskType: $Enums.TaskType
+  status?: $Enums.TaskStatus
   caseNumber: string
   registrarName: string
   ianaId: string
@@ -585,6 +587,7 @@ export type TaskUpdateInput = {
   caseAId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   caseBId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  status?: Prisma.EnumTaskStatusFieldUpdateOperationsInput | $Enums.TaskStatus
   template?: Prisma.TemplateUpdateOneWithoutTasksNestedInput
   steps?: Prisma.StepUpdateManyWithoutTaskNestedInput
 }
@@ -617,6 +620,7 @@ export type TaskUncheckedUpdateInput = {
   caseAId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   caseBId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  status?: Prisma.EnumTaskStatusFieldUpdateOperationsInput | $Enums.TaskStatus
   templateId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   steps?: Prisma.StepUncheckedUpdateManyWithoutTaskNestedInput
 }
@@ -1431,6 +1435,7 @@ export type $TaskPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     createdAt: Date
     updatedAt: Date
     taskType: $Enums.TaskType
+    status: $Enums.TaskStatus
     caseNumber: string
     registrarName: string
     ianaId: string

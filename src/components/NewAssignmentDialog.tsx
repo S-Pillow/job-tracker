@@ -1,20 +1,14 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { X } from 'lucide-react';
+import { X, AlertCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { createSimpleTask } from '@/app/actions';
+import { simpleTaskSchema, type SimpleTaskInput } from '@/lib/validation';
 
-const schema = z.object({
-  registrarName: z.string().min(1, 'Required'),
-  ianaId: z.string().min(1, 'Required'),
-  caseNumber: z.string().min(1, 'Required'),
-});
-
-type FormValues = z.infer<typeof schema>;
+type FormValues = SimpleTaskInput;
 
 interface Props {
   open: boolean;
@@ -23,18 +17,24 @@ interface Props {
 
 export function NewAssignmentDialog({ open, onOpenChange }: Props) {
   const [isPending, startTransition] = useTransition();
+  const [serverError, setServerError] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) });
+  } = useForm<FormValues>({ resolver: zodResolver(simpleTaskSchema) });
 
   function onSubmit(values: FormValues) {
+    setServerError(null);
     startTransition(async () => {
-      await createSimpleTask('ASSIGNMENT', values);
-      reset();
-      onOpenChange(false);
+      try {
+        await createSimpleTask('ASSIGNMENT', values);
+        reset();
+        onOpenChange(false);
+      } catch (err) {
+        setServerError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+      }
     });
   }
 
@@ -95,6 +95,13 @@ export function NewAssignmentDialog({ open, onOpenChange }: Props) {
                 )}
               </div>
             </div>
+
+            {serverError && (
+              <div className="flex items-start gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+                <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
+                {serverError}
+              </div>
+            )}
 
             <div className="flex justify-end gap-3 pt-2">
               <Dialog.Close asChild>

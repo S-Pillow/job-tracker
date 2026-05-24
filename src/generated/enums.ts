@@ -18,6 +18,16 @@ export const TaskType = {
 export type TaskType = (typeof TaskType)[keyof typeof TaskType]
 
 
+export const TaskStatus = {
+  NOT_STARTED: 'NOT_STARTED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  WAITING_FOR_CONFIRMATION: 'WAITING_FOR_CONFIRMATION',
+  COMPLETED: 'COMPLETED'
+} as const
+
+export type TaskStatus = (typeof TaskStatus)[keyof typeof TaskStatus]
+
+
 export const StepStatus = {
   NOT_STARTED: 'NOT_STARTED',
   IN_PROGRESS: 'IN_PROGRESS',

@@ -14,6 +14,14 @@ enum TaskType {
   ASSIGNMENT
 }
 
+/// High-level case status persisted on the Task record
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  WAITING_FOR_CONFIRMATION
+  COMPLETED
+}
+
 /// Step status values
 enum StepStatus {
   NOT_STARTED
@@ -66,9 +74,10 @@ model Task {
   updatedAt DateTime @updatedAt
 
   taskType  TaskType
+  status    TaskStatus @default(NOT_STARTED)
 
   // Common fields
-  caseNumber    String
+  caseNumber    String  @unique
   registrarName String
   ianaId        String
   tldScope      String?
@@ -122,6 +131,7 @@ model Step {
 
   notes          String?
   blockedReason  String?
+  completedAt    DateTime?
 
   isConditional  Boolean @default(false)
   isGate         Boolean @default(false)

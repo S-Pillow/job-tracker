@@ -377,6 +377,7 @@ export type StepUpdateInput = {
   status?: Prisma.EnumStepStatusFieldUpdateOperationsInput | $Enums.StepStatus
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blockedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isConditional?: Prisma.BoolFieldUpdateOperationsInput | boolean
   task?: Prisma.TaskUpdateOneRequiredWithoutStepsNestedInput
 }
@@ -391,6 +392,7 @@ export type StepUncheckedUpdateInput = {
   status?: Prisma.EnumStepStatusFieldUpdateOperationsInput | $Enums.StepStatus
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   blockedReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   isConditional?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
@@ -669,10 +671,14 @@ export type StepSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   taskId?: boolean
   order?: boolean
   title?: boolean
+  description?: boolean
   status?: boolean
   notes?: boolean
   blockedReason?: boolean
+  completedAt?: boolean
   isConditional?: boolean
+  isGate?: boolean
+  isStopWarning?: boolean
   task?: boolean | Prisma.TaskDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["step"]>
 
@@ -683,10 +689,14 @@ export type StepSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   taskId?: boolean
   order?: boolean
   title?: boolean
+  description?: boolean
   status?: boolean
   notes?: boolean
   blockedReason?: boolean
+  completedAt?: boolean
   isConditional?: boolean
+  isGate?: boolean
+  isStopWarning?: boolean
   task?: boolean | Prisma.TaskDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["step"]>
 
@@ -697,10 +707,14 @@ export type StepSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   taskId?: boolean
   order?: boolean
   title?: boolean
+  description?: boolean
   status?: boolean
   notes?: boolean
   blockedReason?: boolean
+  completedAt?: boolean
   isConditional?: boolean
+  isGate?: boolean
+  isStopWarning?: boolean
   task?: boolean | Prisma.TaskDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["step"]>
 
@@ -711,13 +725,17 @@ export type StepSelectScalar = {
   taskId?: boolean
   order?: boolean
   title?: boolean
+  description?: boolean
   status?: boolean
   notes?: boolean
   blockedReason?: boolean
+  completedAt?: boolean
   isConditional?: boolean
+  isGate?: boolean
+  isStopWarning?: boolean
 }
 
-export type StepOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "createdAt" | "updatedAt" | "taskId" | "order" | "title" | "status" | "notes" | "blockedReason" | "isConditional", ExtArgs["result"]["step"]>
+export type StepOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "createdAt" | "updatedAt" | "taskId" | "order" | "title" | "description" | "status" | "notes" | "blockedReason" | "completedAt" | "isConditional" | "isGate" | "isStopWarning", ExtArgs["result"]["step"]>
 export type StepInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   task?: boolean | Prisma.TaskDefaultArgs<ExtArgs>
 }
@@ -744,6 +762,7 @@ export type $StepPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     status: $Enums.StepStatus
     notes: string | null
     blockedReason: string | null
+    completedAt: Date | null
     isConditional: boolean
     isGate: boolean
     isStopWarning: boolean
