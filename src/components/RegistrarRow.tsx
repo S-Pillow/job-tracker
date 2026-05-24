@@ -141,7 +141,7 @@ export function RegistrarRow({ task, isExpanded, onToggle }: Props) {
 
       {isExpanded && (
         <div className="border-t border-zinc-100">
-          <StepList steps={task.steps} />
+          <StepList steps={task.steps} taskId={task.id} />
         </div>
       )}
     </div>

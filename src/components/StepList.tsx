@@ -1,28 +1,32 @@
 import { StepItem } from './StepItem';
+import { CloseCaseButton } from './CloseCaseButton';
 import type { StepData } from '@/lib/types';
 
 interface Props {
   steps: StepData[];
+  taskId: string;
 }
 
 const TEARDOWN_START_ORDER = 11;
 
 /**
- * Returns true if the given step is blocked by an unresolved gate step.
+ * Returns the title of the gate step blocking this step, or null if not locked.
  * A gate step (isGate=true) must be COMPLETE before any later steps can proceed.
  */
-function isLockedByGate(step: StepData, steps: StepData[]): boolean {
-  return steps.some(
+function getLockedByTitle(step: StepData, steps: StepData[]): string | null {
+  const gateStep = steps.find(
     (s) => s.isGate && s.order < step.order && s.status !== 'COMPLETE',
   );
+  return gateStep?.title ?? null;
 }
 
-export function StepList({ steps }: Props) {
+export function StepList({ steps, taskId }: Props) {
   if (steps.length === 0) {
     return (
       <div className="px-4 py-8 text-center text-zinc-400">
         <p className="text-sm">Steps for this workflow haven&apos;t been defined yet.</p>
-        <p className="text-xs mt-1">Check back later or contact your team lead.</p>
+        <p className="text-xs mt-1 mb-4">Check back later or contact your team lead.</p>
+        <CloseCaseButton taskId={taskId} />
       </div>
     );
   }
@@ -55,7 +59,7 @@ export function StepList({ steps }: Props) {
             key={step.id}
             step={step}
             isCurrent={step.order === currentStep?.order}
-            isLocked={isLockedByGate(step, steps)}
+            lockedByTitle={getLockedByTitle(step, steps)}
           />
         ))}
       </div>
@@ -78,7 +82,7 @@ export function StepList({ steps }: Props) {
             key={step.id}
             step={step}
             isCurrent={step.order === currentStep?.order}
-            isLocked={isLockedByGate(step, steps)}
+            lockedByTitle={getLockedByTitle(step, steps)}
           />
         ))}
       </div>

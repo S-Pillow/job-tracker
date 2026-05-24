@@ -15,12 +15,14 @@ interface Props {
 }
 
 function isTaskComplete(task: TaskData): boolean {
+  // A task closed manually (no steps) is complete when completedAt is set.
+  if (task.completedAt !== null) return true;
   const activeSteps = task.steps.filter((s) => s.status !== 'NA');
   return activeSteps.length > 0 && activeSteps.every((s) => s.status === 'COMPLETE');
 }
 
 const TAB_CONFIG: { id: Tab; label: string }[] = [
-  { id: 'all', label: 'All' },
+  { id: 'all', label: 'Active' },
   { id: 'terminations', label: 'Terminations' },
   { id: 'name-changes', label: 'Name Changes' },
   { id: 'assignments', label: 'Assignments' },
@@ -45,7 +47,7 @@ export function JobTrackerShell({ tasks }: Props) {
 
   const counts = useMemo(
     () => ({
-      all: tasks.length,
+      all: tasks.filter((t) => !isTaskComplete(t)).length,
       terminations: tasks.filter(
         (t) => t.taskType === 'TERMINATION' && !isTaskComplete(t),
       ).length,
@@ -77,12 +79,13 @@ export function JobTrackerShell({ tasks }: Props) {
       case 'completed':
         return tasks.filter(isTaskComplete);
       default:
-        return tasks;
+        // "Active" tab: all open tasks across all types
+        return tasks.filter((t) => !isTaskComplete(t));
     }
   }, [tasks, activeTab]);
 
   const emptyMessages: Record<Tab, { title: string; subtitle: string }> = {
-    all: { title: 'No tasks yet.', subtitle: 'Add a termination, name change, or assignment to get started.' },
+    all: { title: 'No active tasks.', subtitle: 'Add a termination, name change, or assignment to get started.' },
     terminations: { title: 'No active terminations.', subtitle: 'Click "Add Termination" to get started.' },
     'name-changes': { title: 'No active name changes.', subtitle: 'Click "Add Name Change" to get started.' },
     assignments: { title: 'No active assignments.', subtitle: 'Click "Add Assignment" to get started.' },

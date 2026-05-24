@@ -97,3 +97,11 @@ export async function deleteTask(taskId: string) {
   await prisma.task.delete({ where: { id: taskId } });
   revalidatePath('/');
 }
+
+export async function closeTask(taskId: string) {
+  await prisma.task.update({
+    where: { id: taskId },
+    data: { completedAt: new Date() },
+  });
+  revalidatePath('/');
+}
