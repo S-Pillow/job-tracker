@@ -42,4 +42,9 @@ next-env.d.ts
 
 /src/generated/prisma
 dev.db
+dev.db.bak
+production.db
+production.db-shm
+production.db-wal
 *.db-journal
+backups/

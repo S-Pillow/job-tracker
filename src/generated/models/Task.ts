@@ -357,6 +357,8 @@ export type TaskWhereInput = {
   cnnicTwnicNotified?: Prisma.BoolFilter<"Task"> | boolean
   caseAId?: Prisma.StringNullableFilter<"Task"> | string | null
   caseBId?: Prisma.StringNullableFilter<"Task"> | string | null
+  completedAt?: Prisma.DateTimeNullableFilter<"Task"> | Date | string | null
+  status?: Prisma.EnumTaskStatusFilter<"Task"> | $Enums.TaskStatus
   templateId?: Prisma.StringNullableFilter<"Task"> | string | null
   template?: Prisma.XOR<Prisma.TemplateNullableScalarRelationFilter, Prisma.TemplateWhereInput> | null
   steps?: Prisma.StepListRelationFilter
@@ -389,6 +391,8 @@ export type TaskOrderByWithRelationInput = {
   cnnicTwnicNotified?: Prisma.SortOrder
   caseAId?: Prisma.SortOrderInput | Prisma.SortOrder
   caseBId?: Prisma.SortOrderInput | Prisma.SortOrder
+  completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  status?: Prisma.SortOrder
   templateId?: Prisma.SortOrderInput | Prisma.SortOrder
   template?: Prisma.TemplateOrderByWithRelationInput
   steps?: Prisma.StepOrderByRelationAggregateInput

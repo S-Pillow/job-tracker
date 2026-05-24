@@ -3,7 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { terminationTaskSchema, simpleTaskSchema } from '@/lib/validation';
-import type { NewTerminationFormData, NewSimpleTaskFormData, TaskType } from '@/lib/types';
+import { mapTaskData, STEPS_INCLUDE } from '@/lib/mappers';
+import type { NewTerminationFormData, NewSimpleTaskFormData, TaskData, TaskType } from '@/lib/types';
+
+const COMPLETED_PAGE_SIZE = 50;
 
 // ─── Status derivation ───────────────────────────────────────────────────────
 
@@ -16,7 +19,6 @@ function deriveTaskStatus(
   if (activeSteps.length === 0) return 'NOT_STARTED';
   if (activeSteps.every((s) => s.status === 'COMPLETE')) return 'COMPLETED';
 
-  // The first incomplete step by order determines the status
   const firstIncomplete = [...activeSteps]
     .sort((a, b) => a.order - b.order)
     .find((s) => s.status !== 'COMPLETE');
@@ -41,49 +43,72 @@ function isDuplicateCaseNumber(err: unknown): boolean {
   return false;
 }
 
-// ─── Step status update ──────────────────────────────────────────────────────
+// ─── Step status update (P5: wrapped in transaction) ─────────────────────────
 
 export async function updateStepStatus(
   stepId: string,
   status: 'COMPLETE' | 'NOT_STARTED',
 ) {
-  // Update step status and its own completedAt timestamp (T4)
-  const step = await prisma.step.update({
-    where: { id: stepId },
-    data: {
-      status,
-      completedAt: status === 'COMPLETE' ? new Date() : null,
-    },
-    select: { taskId: true },
-  });
+  await prisma.$transaction(async (tx) => {
+    // Update step + its own completedAt in one write
+    const step = await tx.step.update({
+      where: { id: stepId },
+      data: {
+        status,
+        completedAt: status === 'COMPLETE' ? new Date() : null,
+      },
+      select: { taskId: true },
+    });
 
-  // Fetch all steps for this task to derive task-level state (T2)
-  const allSteps = await prisma.step.findMany({
-    where: { taskId: step.taskId },
-    select: { status: true, isGate: true, order: true },
-  });
+    // Read all sibling steps to derive the task-level status
+    const allSteps = await tx.step.findMany({
+      where: { taskId: step.taskId },
+      select: { status: true, isGate: true, order: true },
+    });
 
-  const activeSteps = allSteps.filter((s) => s.status !== 'NA');
-  const isNowComplete =
-    activeSteps.length > 0 && activeSteps.every((s) => s.status === 'COMPLETE');
+    const activeSteps = allSteps.filter((s) => s.status !== 'NA');
+    const isNowComplete =
+      activeSteps.length > 0 && activeSteps.every((s) => s.status === 'COMPLETE');
 
-  const taskStatus = deriveTaskStatus(allSteps);
+    const taskStatus = deriveTaskStatus(allSteps);
 
-  await prisma.task.update({
-    where: { id: step.taskId },
-    data: {
-      status: taskStatus,
-      completedAt: isNowComplete ? new Date() : null,
-    },
+    await tx.task.update({
+      where: { id: step.taskId },
+      data: {
+        status: taskStatus,
+        completedAt: isNowComplete ? new Date() : null,
+      },
+    });
   });
 
   revalidatePath('/');
 }
 
+// ─── Fetch completed tasks (P7/P8: lazy-loaded with pagination) ──────────────
+
+export async function getCompletedTasks(
+  offset: number = 0,
+): Promise<{ tasks: TaskData[]; hasMore: boolean; total: number }> {
+  const [raw, total] = await Promise.all([
+    prisma.task.findMany({
+      where: { NOT: { completedAt: null } },
+      include: STEPS_INCLUDE,
+      orderBy: { completedAt: 'desc' },
+      take: COMPLETED_PAGE_SIZE + 1,
+      skip: offset,
+    }),
+    prisma.task.count({ where: { NOT: { completedAt: null } } }),
+  ]);
+
+  const hasMore = raw.length > COMPLETED_PAGE_SIZE;
+  const tasks = raw.slice(0, COMPLETED_PAGE_SIZE).map(mapTaskData);
+
+  return { tasks, hasMore, total };
+}
+
 // ─── Create termination task ─────────────────────────────────────────────────
 
 export async function createTerminationTask(data: NewTerminationFormData) {
-  // T5: Server-side validation using shared schema
   terminationTaskSchema.parse(data);
 
   const template = await prisma.template.findFirst({
@@ -95,7 +120,6 @@ export async function createTerminationTask(data: NewTerminationFormData) {
     throw new Error('No default TERMINATION template found. Run db:seed first.');
   }
 
-  // T1: Catch unique constraint violation on caseNumber
   try {
     await prisma.task.create({
       data: {
@@ -144,10 +168,8 @@ export async function createSimpleTask(
   taskType: TaskType,
   data: NewSimpleTaskFormData,
 ) {
-  // T5: Server-side validation
   simpleTaskSchema.parse(data);
 
-  // T1: Catch unique constraint violation on caseNumber
   try {
     await prisma.task.create({
       data: {
@@ -172,7 +194,6 @@ export async function createSimpleTask(
 // ─── Close step-less task ────────────────────────────────────────────────────
 
 export async function closeTask(taskId: string) {
-  // T3: Guard — only close tasks that have no steps
   const stepCount = await prisma.step.count({ where: { taskId } });
   if (stepCount > 0) {
     throw new Error(

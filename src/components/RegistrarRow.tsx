@@ -93,7 +93,7 @@ export function RegistrarRow({ task, isExpanded, onToggle }: Props) {
           <span className="hidden lg:inline text-xs flex-shrink-0 whitespace-nowrap">
             {isAllDone && task.completedAt ? (
               <span className="text-emerald-600 font-medium">
-                Completed {task.completedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                Completed {new Date(task.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </span>
             ) : isAllDone ? (
               <span className="text-emerald-600 font-medium">Complete</span>

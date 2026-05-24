@@ -3,9 +3,12 @@ import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { PrismaClient } from "../generated/client";
 
 function createPrismaClient() {
-  const dbPath = path.join(process.cwd(), "dev.db");
+  const dbPath = path.join(process.cwd(), "production.db");
   const adapter = new PrismaLibSql({ url: `file:${dbPath}` });
-  return new PrismaClient({ adapter, log: ["error", "warn"] });
+  const client = new PrismaClient({ adapter, log: ["error", "warn"] });
+  // Enable WAL mode for better concurrent read performance (persists on disk)
+  client.$executeRawUnsafe("PRAGMA journal_mode=WAL;").catch(() => {});
+  return client;
 }
 
 const globalForPrisma = globalThis as unknown as {
