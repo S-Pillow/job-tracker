@@ -96,6 +96,18 @@ export function NewNameChangeDialog({ open, onOpenChange }: Props) {
               </div>
             </div>
 
+            <div className="flex items-center gap-2">
+              <input
+                id="nc-hasGateway"
+                type="checkbox"
+                {...register('hasGatewayCnTw')}
+                className="w-4 h-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+              />
+              <label htmlFor="nc-hasGateway" className="text-sm text-zinc-700 cursor-pointer select-none">
+                Has Gateway accreditation (enables conditional step 7)
+              </label>
+            </div>
+
             <div>
               <label className="block text-xs font-medium text-zinc-600 mb-1">
                 Your name <span className="font-normal text-zinc-400">(optional)</span>

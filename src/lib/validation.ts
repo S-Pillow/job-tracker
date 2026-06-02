@@ -18,6 +18,7 @@ export const simpleTaskSchema = z.object({
   ianaId: z.string().min(1, 'IANA ID is required'),
   caseNumber: z.string().min(1, 'Case number is required'),
   createdBy: z.string().optional().default(''),
+  hasGatewayCnTw: z.boolean().optional().default(false),
 });
 
 export type TerminationTaskInput = z.infer<typeof terminationTaskSchema>;

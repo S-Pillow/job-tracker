@@ -48,4 +48,5 @@ export type NewSimpleTaskFormData = {
   registrarName: string;
   ianaId: string;
   caseNumber: string;
+  hasGatewayCnTw?: boolean;
 };

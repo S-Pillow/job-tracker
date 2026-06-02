@@ -82,6 +82,7 @@ async function main() {
             order: 7,
             title: "Update Gateway Platform",
             description: "Edit the registrar in both Gateway OTE and Gateway Production.",
+            isConditional: true,
           },
           {
             order: 8,

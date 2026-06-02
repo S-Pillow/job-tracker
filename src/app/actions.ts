@@ -275,7 +275,7 @@ export async function createSimpleTask(
         ianaId: data.ianaId,
         caseNumber: data.caseNumber,
         createdBy: (data as any).createdBy || null,
-        hasGatewayCnTw: false,
+        hasGatewayCnTw: (data as any).hasGatewayCnTw ?? false,
         ...(template && { templateId: template.id }),
         ...(template && {
           steps: {

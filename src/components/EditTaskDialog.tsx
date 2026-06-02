@@ -69,6 +69,8 @@ export function EditTaskDialog({ task }: Props) {
   const [isPending, startTransition] = useTransition();
 
   const isTermination = task.taskType === 'TERMINATION';
+  const isNameChange = task.taskType === 'NAME_CHANGE';
+  const showGatewayField = isTermination || isNameChange;
 
   const {
     register,
@@ -212,6 +214,24 @@ export function EditTaskDialog({ task }: Props) {
                     Has Gateway CN/TW scope
                   </label>
                 </div>
+              </div>
+            )}
+
+            {/* Gateway checkbox for Name Change (outside the termination block) */}
+            {isNameChange && (
+              <div className="flex items-center gap-2">
+                <input
+                  id="edit-hasGatewayNc"
+                  type="checkbox"
+                  {...register('hasGatewayCnTw')}
+                  className="w-4 h-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                />
+                <label
+                  htmlFor="edit-hasGatewayNc"
+                  className="text-sm text-zinc-700 cursor-pointer select-none"
+                >
+                  Has Gateway accreditation (enables conditional step 7)
+                </label>
               </div>
             )}
 
