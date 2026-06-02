@@ -258,6 +258,12 @@ export async function createSimpleTask(
 ) {
   simpleTaskSchema.parse(data);
 
+  // Use the default template for this task type if one exists
+  const template = await prisma.template.findFirst({
+    where: { taskType, isDefault: true },
+    include: { steps: { orderBy: { order: 'asc' } } },
+  });
+
   let newTaskId: string | null = null;
 
   try {
@@ -270,6 +276,20 @@ export async function createSimpleTask(
         caseNumber: data.caseNumber,
         createdBy: (data as any).createdBy || null,
         hasGatewayCnTw: false,
+        ...(template && { templateId: template.id }),
+        ...(template && {
+          steps: {
+            create: template.steps.map((s) => ({
+              order: s.order,
+              title: s.title,
+              description: s.description ?? null,
+              isConditional: s.isConditional,
+              isGate: s.isGate,
+              isStopWarning: s.isStopWarning,
+              status: 'NOT_STARTED' as const,
+            })),
+          },
+        }),
       },
       select: { id: true },
     });
