@@ -23,7 +23,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    // suppressHydrationWarning prevents React from complaining about the
+    // 'dark' class that the inline script below may add before hydration.
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Inline script runs synchronously before paint.
+            Priority: 1) explicit localStorage value  2) OS preference
+            This prevents any flash of the wrong theme on first load or refresh. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(t===null&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark');}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

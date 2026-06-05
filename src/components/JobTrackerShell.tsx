@@ -139,7 +139,7 @@ export function JobTrackerShell({ tasks, completedCount }: Props) {
   return (
     <div>
       {/* Tab bar */}
-      <div className="flex items-center gap-1 border-b border-zinc-200 mb-4 overflow-x-auto">
+      <div className="flex items-center gap-1 border-b border-zinc-200 dark:border-zinc-700 mb-4 overflow-x-auto scrollbar-hide">
         {TAB_CONFIG.map((tab) => (
           <button
             key={tab.id}
@@ -148,8 +148,8 @@ export function JobTrackerShell({ tasks, completedCount }: Props) {
             className={[
               'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap',
               activeTab === tab.id
-                ? 'border-zinc-900 text-zinc-900'
-                : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300',
+                ? 'border-zinc-900 dark:border-zinc-100 text-zinc-900 dark:text-zinc-50'
+                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-600',
             ].join(' ')}
           >
             {tab.label}
@@ -158,8 +158,8 @@ export function JobTrackerShell({ tasks, completedCount }: Props) {
                 className={[
                   'text-[10px] px-1.5 py-0.5 rounded-full font-semibold tabular-nums',
                   activeTab === tab.id
-                    ? 'bg-zinc-900 text-white'
-                    : 'bg-zinc-100 text-zinc-500',
+                    ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900'
+                    : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-300',
                 ].join(' ')}
               >
                 {counts[tab.id]}
@@ -180,7 +180,7 @@ export function JobTrackerShell({ tasks, completedCount }: Props) {
             placeholder="Search by name, IANA ID, or case #"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-8 pr-7 py-1.5 text-sm bg-white border border-zinc-200 rounded-md placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-300 focus:border-transparent"
+            className="w-full pl-8 pr-7 py-1.5 text-sm bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-600 rounded-md placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-600 focus:border-transparent"
           />
           {searchQuery && (
             <button
@@ -194,7 +194,7 @@ export function JobTrackerShell({ tasks, completedCount }: Props) {
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
-          <p className="text-xs text-zinc-400 uppercase tracking-wider font-medium mr-1 hidden sm:block">
+          <p className="text-xs text-zinc-400 dark:text-zinc-500 uppercase tracking-wider font-medium mr-1 hidden sm:block">
             Registrars
           </p>
           {activeTab !== 'completed' && (
@@ -203,7 +203,7 @@ export function JobTrackerShell({ tasks, completedCount }: Props) {
                 <button
                   type="button"
                   onClick={() => setTermDialogOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-700 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-medium hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
                 >
                   <Plus size={14} />
                   Add Termination
@@ -213,7 +213,7 @@ export function JobTrackerShell({ tasks, completedCount }: Props) {
                 <button
                   type="button"
                   onClick={() => setNcDialogOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-200 text-zinc-700 text-sm font-medium hover:bg-zinc-50 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-200 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
                 >
                   <Plus size={14} />
                   Add Name Change
@@ -223,7 +223,7 @@ export function JobTrackerShell({ tasks, completedCount }: Props) {
                 <button
                   type="button"
                   onClick={() => setAssignDialogOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-200 text-zinc-700 text-sm font-medium hover:bg-zinc-50 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-200 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
                 >
                   <Plus size={14} />
                   Add Assignment
@@ -236,7 +236,7 @@ export function JobTrackerShell({ tasks, completedCount }: Props) {
           <a
             href="/tools/job-tracker/api/export?format=csv"
             download="job-tracker-export.csv"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-200 text-zinc-600 text-sm font-medium hover:bg-zinc-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-zinc-200 dark:border-zinc-600 text-zinc-600 dark:text-zinc-300 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
             title="Download all cases as CSV"
           >
             Export CSV
@@ -255,7 +255,7 @@ export function JobTrackerShell({ tasks, completedCount }: Props) {
 
       {/* Completed tab: loading spinner */}
       {activeTab === 'completed' && isPendingCompleted && completedTasks.length === 0 && (
-        <div className="flex items-center justify-center py-16 text-zinc-400 gap-2">
+        <div className="flex items-center justify-center py-16 text-zinc-400 dark:text-zinc-500 gap-2">
           <Loader2 size={16} className="animate-spin" />
           <span className="text-sm">Loading completed cases…</span>
         </div>
@@ -265,12 +265,12 @@ export function JobTrackerShell({ tasks, completedCount }: Props) {
       {!(activeTab === 'completed' && isPendingCompleted && completedTasks.length === 0) && (
         <>
           {visibleTasks.length === 0 && !searchQuery.trim() ? (
-            <div className="text-center py-16 text-zinc-400">
+            <div className="text-center py-16 text-zinc-400 dark:text-zinc-500">
               <p className="text-sm">{emptyMessages[activeTab].title}</p>
               <p className="text-xs mt-1">{emptyMessages[activeTab].subtitle}</p>
             </div>
           ) : visibleTasks.length === 0 && searchQuery.trim() ? (
-            <div className="text-center py-16 text-zinc-400">
+            <div className="text-center py-16 text-zinc-400 dark:text-zinc-500">
               <p className="text-sm">No cases match &ldquo;{searchQuery}&rdquo;</p>
               <p className="text-xs mt-1">Try searching by registrar name, IANA ID, or case number</p>
             </div>
@@ -294,7 +294,7 @@ export function JobTrackerShell({ tasks, completedCount }: Props) {
                 type="button"
                 onClick={() => loadCompletedPage(completedOffset, true)}
                 disabled={isPendingCompleted}
-                className="px-4 py-2 text-sm text-zinc-600 border border-zinc-200 rounded-md hover:bg-zinc-50 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-sm text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-600 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-50 transition-colors"
               >
                 {isPendingCompleted ? (
                   <span className="flex items-center gap-2">
