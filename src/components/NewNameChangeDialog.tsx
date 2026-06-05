@@ -4,11 +4,23 @@ import { useState, useTransition } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, AlertCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createSimpleTask } from '@/app/actions';
-import { simpleTaskSchema, type SimpleTaskInput } from '@/lib/validation';
 
-type FormValues = SimpleTaskInput;
+const nameChangeFormSchema = z.object({
+  oldRegistrarName: z.string().min(1, 'Old registrar name is required'),
+  newRegistrarName: z.string().min(1, 'New registrar name is required'),
+  ianaId: z.string().min(1, 'IANA ID is required'),
+  caseNumber: z.string().min(1, 'Case number is required'),
+  hasGatewayCnTw: z.boolean().default(false),
+  createdBy: z.string().optional().default(''),
+});
+
+type FormValues = z.infer<typeof nameChangeFormSchema>;
+
+const inputCls =
+  'w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900';
 
 interface Props {
   open: boolean;
@@ -18,18 +30,28 @@ interface Props {
 export function NewNameChangeDialog({ open, onOpenChange }: Props) {
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<FormValues>({ resolver: zodResolver(simpleTaskSchema) as any });
+  } = useForm<FormValues>({ resolver: zodResolver(nameChangeFormSchema) as any });
 
   function onSubmit(values: FormValues) {
     setServerError(null);
     startTransition(async () => {
       try {
-        await createSimpleTask('NAME_CHANGE', values);
+        // registrarName (row identifier) = old name; old/new stored separately
+        await createSimpleTask('NAME_CHANGE', {
+          registrarName: values.oldRegistrarName,
+          ianaId: values.ianaId,
+          caseNumber: values.caseNumber,
+          hasGatewayCnTw: values.hasGatewayCnTw,
+          createdBy: values.createdBy,
+          oldRegistrarName: values.oldRegistrarName,
+          newRegistrarName: values.newRegistrarName,
+        });
         reset();
         onOpenChange(false);
       } catch (err) {
@@ -53,20 +75,39 @@ export function NewNameChangeDialog({ open, onOpenChange }: Props) {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {/* Old name */}
             <div>
               <label className="block text-sm font-medium text-zinc-700 mb-1">
-                Registrar Name <span className="text-red-500">*</span>
+                Old Registrar Name <span className="text-red-500">*</span>
               </label>
+              <p className="text-xs text-zinc-400 mb-1">Current name — being changed from</p>
               <input
-                {...register('registrarName')}
-                placeholder="e.g. Acme Registrar, Inc."
-                className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                {...register('oldRegistrarName')}
+                placeholder="e.g. Acme Corp, Inc."
+                className={inputCls}
               />
-              {errors.registrarName && (
-                <p className="text-xs text-red-600 mt-1">{errors.registrarName.message}</p>
+              {errors.oldRegistrarName && (
+                <p className="text-xs text-red-600 mt-1">{errors.oldRegistrarName.message}</p>
               )}
             </div>
 
+            {/* New name */}
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                New Registrar Name <span className="text-red-500">*</span>
+              </label>
+              <p className="text-xs text-zinc-400 mb-1">New name per ICANN notice</p>
+              <input
+                {...register('newRegistrarName')}
+                placeholder="e.g. Acme Registrar LLC"
+                className={inputCls}
+              />
+              {errors.newRegistrarName && (
+                <p className="text-xs text-red-600 mt-1">{errors.newRegistrarName.message}</p>
+              )}
+            </div>
+
+            {/* IANA ID + Case Number */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-zinc-700 mb-1">
@@ -75,7 +116,7 @@ export function NewNameChangeDialog({ open, onOpenChange }: Props) {
                 <input
                   {...register('ianaId')}
                   placeholder="e.g. 1234"
-                  className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  className={inputCls}
                 />
                 {errors.ianaId && (
                   <p className="text-xs text-red-600 mt-1">{errors.ianaId.message}</p>
@@ -88,7 +129,7 @@ export function NewNameChangeDialog({ open, onOpenChange }: Props) {
                 <input
                   {...register('caseNumber')}
                   placeholder="e.g. 12345678"
-                  className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                  className={inputCls}
                 />
                 {errors.caseNumber && (
                   <p className="text-xs text-red-600 mt-1">{errors.caseNumber.message}</p>
@@ -96,29 +137,7 @@ export function NewNameChangeDialog({ open, onOpenChange }: Props) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
-                  Old Registrar Name
-                </label>
-                <input
-                  {...register('oldRegistrarName')}
-                  placeholder="Name before change"
-                  className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
-                  New Registrar Name
-                </label>
-                <input
-                  {...register('newRegistrarName')}
-                  placeholder="Name after change"
-                  className="w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                />
-              </div>
-            </div>
-
+            {/* Gateway */}
             <div className="flex items-center gap-2">
               <input
                 id="nc-hasGateway"
@@ -127,10 +146,11 @@ export function NewNameChangeDialog({ open, onOpenChange }: Props) {
                 className="w-4 h-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
               />
               <label htmlFor="nc-hasGateway" className="text-sm text-zinc-700 cursor-pointer select-none">
-                Has Gateway accreditation (enables conditional step 7)
+                Has Gateway accreditation <span className="text-zinc-400">(enables step 7)</span>
               </label>
             </div>
 
+            {/* Your name */}
             <div>
               <label className="block text-xs font-medium text-zinc-600 mb-1">
                 Your name <span className="font-normal text-zinc-400">(optional)</span>
@@ -151,10 +171,7 @@ export function NewNameChangeDialog({ open, onOpenChange }: Props) {
 
             <div className="flex justify-end gap-3 pt-2">
               <Dialog.Close asChild>
-                <button
-                  type="button"
-                  className="px-4 py-2 text-sm text-zinc-600 hover:text-zinc-900 transition-colors"
-                >
+                <button type="button" className="px-4 py-2 text-sm text-zinc-600 hover:text-zinc-900 transition-colors">
                   Cancel
                 </button>
               </Dialog.Close>

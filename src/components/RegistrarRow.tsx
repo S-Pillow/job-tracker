@@ -174,22 +174,13 @@ export function RegistrarRow({ task, isExpanded, onToggle }: Props) {
 
           {/* Name Change: old → new name strip */}
           {(task.oldRegistrarName || task.newRegistrarName) && (
-            <div className="px-5 py-3 bg-zinc-50 border-b border-zinc-100 flex flex-wrap gap-x-6 gap-y-1.5 text-xs text-zinc-600">
-              <span className="font-semibold text-zinc-400 uppercase tracking-wider self-center">
+            <div className="px-5 py-3 bg-zinc-50 border-b border-zinc-100 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
+              <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
                 Name Change
               </span>
-              {task.oldRegistrarName && (
-                <span>
-                  <span className="text-zinc-400">Old Name:&nbsp;</span>
-                  <span className="text-zinc-700 font-medium">{task.oldRegistrarName}</span>
-                </span>
-              )}
-              {task.newRegistrarName && (
-                <span>
-                  <span className="text-zinc-400">New Name:&nbsp;</span>
-                  <span className="text-zinc-700 font-medium">{task.newRegistrarName}</span>
-                </span>
-              )}
+              <span className="text-zinc-700 font-medium">{task.oldRegistrarName ?? '—'}</span>
+              <span className="text-zinc-400">→</span>
+              <span className="text-zinc-700 font-semibold">{task.newRegistrarName ?? '—'}</span>
             </div>
           )}
 

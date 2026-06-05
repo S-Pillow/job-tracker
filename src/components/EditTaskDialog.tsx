@@ -99,7 +99,12 @@ export function EditTaskDialog({ task }: Props) {
     setServerError(null);
     startTransition(async () => {
       try {
-        await updateTask(task.id, values);
+        // For Name Change, the row identifier (registrarName) tracks the old name
+        const submitValues =
+          isNameChange
+            ? { ...values, registrarName: values.oldRegistrarName || values.registrarName }
+            : values;
+        await updateTask(task.id, submitValues);
         setOpen(false);
       } catch (err) {
         setServerError(err instanceof Error ? err.message : 'Save failed — please try again.');
@@ -141,13 +146,31 @@ export function EditTaskDialog({ task }: Props) {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* ── Common fields (all task types) ── */}
+            {/* ── Common fields ── */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <Field label="Registrar Name" required error={errors.registrarName?.message}>
-                  <input {...register('registrarName')} className={inputCls} />
-                </Field>
-              </div>
+              {/* Name Change: show old/new name instead of the generic Registrar Name field */}
+              {isNameChange ? (
+                <>
+                  <div className="col-span-2">
+                    <Field label="Old Registrar Name" required error={errors.oldRegistrarName?.message}>
+                      <p className="text-xs text-zinc-400 mb-1">Current name — being changed from</p>
+                      <input {...register('oldRegistrarName')} placeholder="e.g. Acme Corp, Inc." className={inputCls} />
+                    </Field>
+                  </div>
+                  <div className="col-span-2">
+                    <Field label="New Registrar Name" error={errors.newRegistrarName?.message}>
+                      <p className="text-xs text-zinc-400 mb-1">New name per ICANN notice</p>
+                      <input {...register('newRegistrarName')} placeholder="e.g. Acme Registrar LLC" className={inputCls} />
+                    </Field>
+                  </div>
+                </>
+              ) : (
+                <div className="col-span-2">
+                  <Field label="Registrar Name" required error={errors.registrarName?.message}>
+                    <input {...register('registrarName')} className={inputCls} />
+                  </Field>
+                </div>
+              )}
 
               <Field label="IANA ID" required error={errors.ianaId?.message}>
                 <input {...register('ianaId')} placeholder="e.g. 1234" className={inputCls} />
@@ -216,26 +239,6 @@ export function EditTaskDialog({ task }: Props) {
                     Has Gateway CN/TW scope
                   </label>
                 </div>
-              </div>
-            )}
-
-            {/* Old / New name fields for Name Change */}
-            {isNameChange && (
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Old Registrar Name">
-                  <input
-                    {...register('oldRegistrarName')}
-                    placeholder="Name before change"
-                    className={inputCls}
-                  />
-                </Field>
-                <Field label="New Registrar Name">
-                  <input
-                    {...register('newRegistrarName')}
-                    placeholder="Name after change"
-                    className={inputCls}
-                  />
-                </Field>
               </div>
             )}
 
