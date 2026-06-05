@@ -14,6 +14,8 @@ type RawTask = {
   gainingRegistrarIanaId: string | null;
   icannNoticeDate: Date | null;
   hasGatewayCnTw: boolean;
+  oldRegistrarName: string | null;
+  newRegistrarName: string | null;
   steps: Array<{
     id: string;
     order: number;
@@ -43,6 +45,8 @@ export function mapTaskData(t: RawTask): TaskData {
     gainingRegistrarIanaId: t.gainingRegistrarIanaId,
     icannNoticeDate: t.icannNoticeDate,
     hasGatewayCnTw: t.hasGatewayCnTw,
+    oldRegistrarName: t.oldRegistrarName,
+    newRegistrarName: t.newRegistrarName,
     steps: t.steps.map((s) => ({
       id: s.id,
       order: s.order,

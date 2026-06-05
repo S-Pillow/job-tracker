@@ -19,6 +19,8 @@ export const simpleTaskSchema = z.object({
   caseNumber: z.string().min(1, 'Case number is required'),
   createdBy: z.string().optional().default(''),
   hasGatewayCnTw: z.boolean().optional().default(false),
+  oldRegistrarName: z.string().optional().default(''),
+  newRegistrarName: z.string().optional().default(''),
 });
 
 export type TerminationTaskInput = z.infer<typeof terminationTaskSchema>;
@@ -36,6 +38,8 @@ export const editTaskSchema = z.object({
   gainingRegistrarIanaId: z.string().optional().default(''),
   icannNoticeDate: z.string().optional().default(''),
   hasGatewayCnTw: z.boolean().optional().default(false),
+  oldRegistrarName: z.string().optional().default(''),
+  newRegistrarName: z.string().optional().default(''),
 });
 
 export type EditTaskInput = z.infer<typeof editTaskSchema>;

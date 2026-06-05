@@ -276,6 +276,8 @@ export async function createSimpleTask(
         caseNumber: data.caseNumber,
         createdBy: (data as any).createdBy || null,
         hasGatewayCnTw: (data as any).hasGatewayCnTw ?? false,
+        oldRegistrarName: (data as any).oldRegistrarName || null,
+        newRegistrarName: (data as any).newRegistrarName || null,
         ...(template && { templateId: template.id }),
         ...(template && {
           steps: {
@@ -395,6 +397,8 @@ export async function updateTask(taskId: string, data: EditTaskInput) {
         gainingRegistrarIanaId: v.gainingRegistrarIanaId || null,
         icannNoticeDate: v.icannNoticeDate ? new Date(v.icannNoticeDate) : null,
         hasGatewayCnTw: v.hasGatewayCnTw ?? false,
+        oldRegistrarName: (v as any).oldRegistrarName || null,
+        newRegistrarName: (v as any).newRegistrarName || null,
       },
       select: { caseNumber: true, registrarName: true },
     });

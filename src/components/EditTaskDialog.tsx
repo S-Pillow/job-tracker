@@ -56,6 +56,8 @@ function taskToDefaults(task: TaskData): EditTaskInput {
     gainingRegistrarIanaId: task.gainingRegistrarIanaId ?? '',
     icannNoticeDate: toDateInput(task.icannNoticeDate),
     hasGatewayCnTw: task.hasGatewayCnTw,
+    oldRegistrarName: task.oldRegistrarName ?? '',
+    newRegistrarName: task.newRegistrarName ?? '',
   };
 }
 
@@ -214,6 +216,26 @@ export function EditTaskDialog({ task }: Props) {
                     Has Gateway CN/TW scope
                   </label>
                 </div>
+              </div>
+            )}
+
+            {/* Old / New name fields for Name Change */}
+            {isNameChange && (
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Old Registrar Name">
+                  <input
+                    {...register('oldRegistrarName')}
+                    placeholder="Name before change"
+                    className={inputCls}
+                  />
+                </Field>
+                <Field label="New Registrar Name">
+                  <input
+                    {...register('newRegistrarName')}
+                    placeholder="Name after change"
+                    className={inputCls}
+                  />
+                </Field>
               </div>
             )}
 
