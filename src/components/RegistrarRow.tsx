@@ -172,6 +172,61 @@ export function RegistrarRow({ task, isExpanded, onToggle }: Props) {
             <EditTaskDialog task={task} />
           </div>
 
+          {/* Termination detail strip */}
+          {task.taskType === 'TERMINATION' && (
+            task.terminationType || task.terminationEffectiveDate || task.icannNoticeDate || task.hasGatewayCnTw || task.createdBy
+          ) && (
+            <div className="px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border-b border-zinc-100 dark:border-zinc-700 flex flex-wrap gap-x-6 gap-y-2 text-xs">
+              <span className="font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider self-center">
+                Termination
+              </span>
+
+              {task.terminationType && (
+                <span className="inline-flex items-center gap-1">
+                  <span className="text-zinc-400 dark:text-zinc-500">Type:</span>
+                  <span className="font-medium text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-700 px-1.5 py-0.5 rounded">
+                    {task.terminationType}
+                  </span>
+                </span>
+              )}
+
+              {task.terminationEffectiveDate && (
+                <span>
+                  <span className="text-zinc-400 dark:text-zinc-500">Effective:&nbsp;</span>
+                  <span className="font-medium text-zinc-700 dark:text-zinc-200">
+                    {new Date(task.terminationEffectiveDate).toLocaleDateString('en-US', {
+                      month: 'short', day: 'numeric', year: 'numeric',
+                    })}
+                  </span>
+                </span>
+              )}
+
+              {task.icannNoticeDate && (
+                <span>
+                  <span className="text-zinc-400 dark:text-zinc-500">ICANN Notice:&nbsp;</span>
+                  <span className="font-medium text-zinc-700 dark:text-zinc-200">
+                    {new Date(task.icannNoticeDate).toLocaleDateString('en-US', {
+                      month: 'short', day: 'numeric', year: 'numeric',
+                    })}
+                  </span>
+                </span>
+              )}
+
+              {task.hasGatewayCnTw && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 uppercase tracking-wide">
+                  Gateway CN/TW
+                </span>
+              )}
+
+              {task.createdBy && (
+                <span>
+                  <span className="text-zinc-400 dark:text-zinc-500">Submitted by:&nbsp;</span>
+                  <span className="font-medium text-zinc-700 dark:text-zinc-200">{task.createdBy}</span>
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Name Change: old → new name strip */}
           {(task.oldRegistrarName || task.newRegistrarName) && (
             <div className="px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border-b border-zinc-100 dark:border-zinc-700 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">

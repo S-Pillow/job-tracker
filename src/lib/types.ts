@@ -29,6 +29,7 @@ export type TaskData = {
   gainingRegistrarIanaId: string | null;
   icannNoticeDate: Date | null;
   hasGatewayCnTw: boolean;
+  createdBy: string | null;
   oldRegistrarName: string | null;
   newRegistrarName: string | null;
   steps: StepData[];
