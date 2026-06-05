@@ -224,7 +224,8 @@ export async function createTerminationTask(data: NewTerminationFormData) {
             isConditional: s.isConditional,
             isGate: s.isGate,
             isStopWarning: s.isStopWarning,
-            status: 'NOT_STARTED' as const,
+            // Conditional steps are N/A when the gateway option was not selected
+            status: (s.isConditional && !data.hasGatewayCnTw) ? 'NA' as const : 'NOT_STARTED' as const,
           })),
         },
       },
@@ -288,7 +289,8 @@ export async function createSimpleTask(
               isConditional: s.isConditional,
               isGate: s.isGate,
               isStopWarning: s.isStopWarning,
-              status: 'NOT_STARTED' as const,
+              // Conditional steps are N/A when gateway option was not selected
+              status: (s.isConditional && !(data as any).hasGatewayCnTw) ? 'NA' as const : 'NOT_STARTED' as const,
             })),
           },
         }),
