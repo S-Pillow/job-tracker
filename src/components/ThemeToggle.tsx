@@ -8,7 +8,9 @@ export function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Read preference set by the inline script in layout.tsx (or default to false)
+    // The inline script in layout.tsx already applied the correct class before
+    // paint (localStorage value, or OS preference if no explicit value is saved).
+    // We just read the resulting class here so the icon matches reality.
     setDark(document.documentElement.classList.contains('dark'));
     setMounted(true);
   }, []);

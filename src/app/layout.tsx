@@ -27,11 +27,12 @@ export default function RootLayout({
     // 'dark' class that the inline script below may add before hydration.
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Inline script runs before paint to apply saved theme class,
-            preventing a flash of the wrong theme on refresh. */}
+        {/* Inline script runs synchronously before paint.
+            Priority: 1) explicit localStorage value  2) OS preference
+            This prevents any flash of the wrong theme on first load or refresh. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark')document.documentElement.classList.add('dark');}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(t===null&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark');}}catch(e){}})();`,
           }}
         />
       </head>
