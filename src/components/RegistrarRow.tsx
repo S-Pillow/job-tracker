@@ -55,19 +55,16 @@ export function RegistrarRow({ task, isExpanded, onToggle }: Props) {
 
   return (
     <div className="group border border-zinc-200 rounded-lg overflow-hidden bg-white shadow-sm">
-      <div className="relative">
+      {/* Row header — flex siblings, no overlap */}
+      <div className="flex items-stretch hover:bg-zinc-50 transition-colors">
+        {/* Expand/collapse toggle — takes all remaining space */}
         <button
           type="button"
           onClick={onToggle}
-          className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-zinc-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset pr-24"
+          className="flex-1 min-w-0 flex items-center gap-4 pl-5 pr-3 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset"
         >
-          {/* Expand/collapse chevron */}
           <span className="text-zinc-400 flex-shrink-0">
-            {isExpanded ? (
-              <ChevronDown size={16} />
-            ) : (
-              <ChevronRight size={16} />
-            )}
+            {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
           </span>
 
           {/* Registrar name */}
@@ -100,41 +97,44 @@ export function RegistrarRow({ task, isExpanded, onToggle }: Props) {
             </span>
           </div>
 
-          {/* Current step label / completed date */}
-          <span className="hidden lg:inline text-xs flex-shrink-0 whitespace-nowrap">
-            {isAllDone && task.completedAt ? (
-              <span className="text-emerald-600 font-medium">
-                Completed {new Date(task.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-              </span>
-            ) : isAllDone ? (
-              <span className="text-emerald-600 font-medium">Complete</span>
-            ) : currentStep ? (
-              <span className="text-zinc-500">Step {currentStep.order} of {totalCount}</span>
-            ) : (
-              <span className="text-zinc-400">Not started</span>
-            )}
-          </span>
+          {/* Step label — active tasks only */}
+          {!isTaskCompleted && (
+            <span className="hidden lg:inline text-xs flex-shrink-0 whitespace-nowrap">
+              {currentStep ? (
+                <span className="text-zinc-500">Step {currentStep.order} of {totalCount}</span>
+              ) : (
+                <span className="text-zinc-400">Not started</span>
+              )}
+            </span>
+          )}
         </button>
 
-        {/* Action controls — floats on the right */}
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-          {/* Reopen button — only for completed cases */}
+        {/* Right controls — always a proper flex sibling, never overlapping */}
+        <div className="flex items-center gap-2 pr-3 flex-shrink-0">
+          {/* Completed date + Reopen */}
           {isTaskCompleted && !confirmDelete && (
-            <button
-              type="button"
-              onClick={handleReopen}
-              disabled={isReopening}
-              aria-label="Reopen case"
-              className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-zinc-500 border border-zinc-200 hover:bg-zinc-50 hover:text-zinc-700 disabled:opacity-50 transition-colors"
-            >
-              <RotateCcw size={11} />
-              {isReopening ? 'Reopening…' : 'Reopen'}
-            </button>
+            <>
+              {task.completedAt && (
+                <span className="hidden lg:inline text-xs text-emerald-600 font-medium whitespace-nowrap">
+                  Completed {new Date(task.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={handleReopen}
+                disabled={isReopening}
+                aria-label="Reopen case"
+                className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-zinc-500 border border-zinc-200 hover:bg-zinc-50 hover:text-zinc-700 disabled:opacity-50 transition-colors"
+              >
+                <RotateCcw size={11} />
+                {isReopening ? 'Reopening…' : 'Reopen'}
+              </button>
+            </>
           )}
 
           {/* Delete control */}
           {confirmDelete ? (
-            <div className="flex items-center gap-1.5 bg-white pl-3 rounded">
+            <div className="flex items-center gap-1.5 bg-white rounded">
               <span className="text-xs text-zinc-500 whitespace-nowrap">Delete?</span>
               <button
                 type="button"
