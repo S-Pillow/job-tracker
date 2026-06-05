@@ -20,7 +20,7 @@ const nameChangeFormSchema = z.object({
 type FormValues = z.infer<typeof nameChangeFormSchema>;
 
 const inputCls =
-  'w-full border border-zinc-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900';
+  'w-full border border-zinc-300 dark:border-zinc-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-400';
 
 interface Props {
   open: boolean;
@@ -63,13 +63,13 @@ export function NewNameChangeDialog({ open, onOpenChange }: Props) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-white rounded-xl shadow-xl w-full max-w-md p-6 focus:outline-none">
+        <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-white dark:bg-zinc-900 rounded-xl shadow-xl w-full max-w-md p-6 focus:outline-none">
           <div className="flex items-center justify-between mb-5">
-            <Dialog.Title className="text-lg font-semibold text-zinc-900">
+            <Dialog.Title className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
               Add Name Change
             </Dialog.Title>
-            <Dialog.Close className="rounded p-1 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-colors">
+            <Dialog.Close className="rounded p-1 text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors">
               <X size={16} />
             </Dialog.Close>
           </div>
@@ -77,7 +77,7 @@ export function NewNameChangeDialog({ open, onOpenChange }: Props) {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Old name */}
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1">
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                 Old Registrar Name <span className="text-red-500">*</span>
               </label>
               <p className="text-xs text-zinc-400 mb-1">Current name — being changed from</p>
@@ -93,7 +93,7 @@ export function NewNameChangeDialog({ open, onOpenChange }: Props) {
 
             {/* New name */}
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1">
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                 New Registrar Name <span className="text-red-500">*</span>
               </label>
               <p className="text-xs text-zinc-400 mb-1">New name per ICANN notice</p>
@@ -110,7 +110,7 @@ export function NewNameChangeDialog({ open, onOpenChange }: Props) {
             {/* IANA ID + Case Number */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                   IANA ID <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -123,7 +123,7 @@ export function NewNameChangeDialog({ open, onOpenChange }: Props) {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                   Case Number <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -145,14 +145,14 @@ export function NewNameChangeDialog({ open, onOpenChange }: Props) {
                 {...register('hasGatewayCnTw')}
                 className="w-4 h-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
               />
-              <label htmlFor="nc-hasGateway" className="text-sm text-zinc-700 cursor-pointer select-none">
+              <label htmlFor="nc-hasGateway" className="text-sm text-zinc-700 dark:text-zinc-300 cursor-pointer select-none">
                 Has Gateway accreditation <span className="text-zinc-400">(enables step 7)</span>
               </label>
             </div>
 
             {/* Your name */}
             <div>
-              <label className="block text-xs font-medium text-zinc-600 mb-1">
+              <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
                 Your name <span className="font-normal text-zinc-400">(optional)</span>
               </label>
               <input
@@ -163,7 +163,7 @@ export function NewNameChangeDialog({ open, onOpenChange }: Props) {
             </div>
 
             {serverError && (
-              <div className="flex items-start gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+              <div className="flex items-start gap-2 rounded-md bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-300">
                 <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
                 {serverError}
               </div>
@@ -171,14 +171,14 @@ export function NewNameChangeDialog({ open, onOpenChange }: Props) {
 
             <div className="flex justify-end gap-3 pt-2">
               <Dialog.Close asChild>
-                <button type="button" className="px-4 py-2 text-sm text-zinc-600 hover:text-zinc-900 transition-colors">
+                <button type="button" className="px-4 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
                   Cancel
                 </button>
               </Dialog.Close>
               <button
                 type="submit"
                 disabled={isPending}
-                className="px-4 py-2 rounded-md bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-700 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 rounded-md bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-medium hover:bg-zinc-700 dark:hover:bg-zinc-300 disabled:opacity-50 transition-colors"
               >
                 {isPending ? 'Adding…' : 'Add Name Change'}
               </button>

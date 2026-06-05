@@ -78,9 +78,9 @@ export function NewTerminationDialog({ open, onOpenChange }: Props) {
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-xl p-6 focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]">
+        <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white dark:bg-zinc-900 rounded-xl shadow-xl p-6 focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]">
           <div className="flex items-center justify-between mb-5">
-            <Dialog.Title className="text-lg font-semibold text-zinc-900">
+            <Dialog.Title className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
               New Termination
             </Dialog.Title>
             <Dialog.Close asChild>
@@ -191,7 +191,7 @@ export function NewTerminationDialog({ open, onOpenChange }: Props) {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-zinc-600 mb-1">
+              <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">
                 Your name <span className="font-normal text-zinc-400">(optional)</span>
               </label>
               <input
@@ -202,7 +202,7 @@ export function NewTerminationDialog({ open, onOpenChange }: Props) {
             </div>
 
             {serverError && (
-              <div className="flex items-start gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+              <div className="flex items-start gap-2 rounded-md bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-300">
                 <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
                 {serverError}
               </div>
