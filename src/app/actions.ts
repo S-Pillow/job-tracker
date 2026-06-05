@@ -381,31 +381,60 @@ export async function updateTask(taskId: string, data: EditTaskInput) {
   }
   const v = parsed.data;
 
+  // Fetch the current gateway flag so we can detect a change and sync steps.
+  const existing = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: { hasGatewayCnTw: true, caseNumber: true, registrarName: true },
+  });
+  if (!existing) throw new Error('Task not found.');
+
+  const gatewayChanged = existing.hasGatewayCnTw !== (v.hasGatewayCnTw ?? false);
+  const newGateway = v.hasGatewayCnTw ?? false;
+
   let updatedCaseNumber = '';
   let updatedRegistrarName = '';
 
   try {
-    const updated = await prisma.task.update({
-      where: { id: taskId },
-      data: {
-        registrarName: v.registrarName,
-        ianaId: v.ianaId,
-        caseNumber: v.caseNumber,
-        terminationType: v.terminationType || null,
-        terminationEffectiveDate: v.terminationEffectiveDate
-          ? new Date(v.terminationEffectiveDate)
-          : null,
-        gainingRegistrarName: v.gainingRegistrarName || null,
-        gainingRegistrarIanaId: v.gainingRegistrarIanaId || null,
-        icannNoticeDate: v.icannNoticeDate ? new Date(v.icannNoticeDate) : null,
-        hasGatewayCnTw: v.hasGatewayCnTw ?? false,
-        oldRegistrarName: (v as any).oldRegistrarName || null,
-        newRegistrarName: (v as any).newRegistrarName || null,
-      },
-      select: { caseNumber: true, registrarName: true },
+    await prisma.$transaction(async (tx) => {
+      const updated = await tx.task.update({
+        where: { id: taskId },
+        data: {
+          registrarName: v.registrarName,
+          ianaId: v.ianaId,
+          caseNumber: v.caseNumber,
+          terminationType: v.terminationType || null,
+          terminationEffectiveDate: v.terminationEffectiveDate
+            ? new Date(v.terminationEffectiveDate)
+            : null,
+          gainingRegistrarName: v.gainingRegistrarName || null,
+          gainingRegistrarIanaId: v.gainingRegistrarIanaId || null,
+          icannNoticeDate: v.icannNoticeDate ? new Date(v.icannNoticeDate) : null,
+          hasGatewayCnTw: newGateway,
+          oldRegistrarName: (v as any).oldRegistrarName || null,
+          newRegistrarName: (v as any).newRegistrarName || null,
+        },
+        select: { caseNumber: true, registrarName: true },
+      });
+      updatedCaseNumber = updated.caseNumber;
+      updatedRegistrarName = updated.registrarName;
+
+      // Sync conditional steps when the Gateway flag changes.
+      // Gateway ON  → activate steps that are still NA (never started)
+      // Gateway OFF → deactivate steps that are NOT_STARTED; preserve COMPLETE history
+      if (gatewayChanged) {
+        if (newGateway) {
+          await tx.step.updateMany({
+            where: { taskId, isConditional: true, status: 'NA' },
+            data: { status: 'NOT_STARTED' },
+          });
+        } else {
+          await tx.step.updateMany({
+            where: { taskId, isConditional: true, status: 'NOT_STARTED' },
+            data: { status: 'NA' },
+          });
+        }
+      }
     });
-    updatedCaseNumber = updated.caseNumber;
-    updatedRegistrarName = updated.registrarName;
   } catch (err) {
     if (isDuplicateCaseNumber(err)) {
       throw new Error('A case with this case number already exists.');
@@ -418,6 +447,9 @@ export async function updateTask(taskId: string, data: EditTaskInput) {
     taskId,
     caseNumber: updatedCaseNumber,
     registrarName: updatedRegistrarName,
+    note: gatewayChanged
+      ? `Gateway accreditation changed to ${newGateway ? 'enabled' : 'disabled'}`
+      : null,
   });
 
   revalidatePath('/');
