@@ -1,0 +1,46 @@
+---
+description: Canonical rule for how Job Tracker determines whether a task is active or completed
+alwaysApply: true
+---
+
+# Task Completion Source-of-Truth
+
+`Task.completedAt` is the **sole canonical indicator** of whether a task is completed.
+
+## Rule
+
+A task is **active** when `completedAt IS NULL`.  
+A task is **completed** when `completedAt IS NOT NULL`.
+
+Step completion state shows workflow progress but must **never** be used alone to classify a task as completed or to hide it from active views.
+
+## Why this matters
+
+`reopenTask` clears `completedAt` but intentionally leaves checked steps intact (audit trail). Any code that filters on step state will incorrectly treat a reopened task as still completed and make it invisible.
+
+## Correct pattern
+
+```typescript
+// ✅ CORRECT — matches backend query WHERE completedAt IS NULL
+function isTaskComplete(task: TaskData): boolean {
+  return task.completedAt !== null;
+}
+```
+
+## Forbidden pattern
+
+```typescript
+// ❌ WRONG — hides reopened tasks where completedAt is null but steps remain checked
+function isTaskComplete(task: TaskData): boolean {
+  if (task.completedAt !== null) return true;
+  const activeSteps = task.steps.filter((s) => s.status !== 'NA');
+  return activeSteps.length > 0 && activeSteps.every((s) => s.status === 'COMPLETE');
+}
+```
+
+## Applies to
+
+- `JobTrackerShell.tsx` — `isTaskComplete()`, `counts`, `baseVisibleTasks`
+- `page.tsx` — active task server query
+- `actions.ts` — `getCompletedTasks`, `reopenTask`, any future filter
+- Any new component that renders task lists or counts
