@@ -8,12 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { createTerminationTask } from '@/app/actions';
 import { terminationTaskSchema, type TerminationTaskInput } from '@/lib/validation';
 import type { NewTerminationFormData } from '@/lib/types';
-
-const TERMINATION_TYPES = [
-  'ICANN Termination',
-  'Self Termination',
-  'Terminated for Cause',
-] as const;
+import { TERMINATION_TYPES } from '@/lib/constants';
 
 type FormValues = TerminationTaskInput;
 

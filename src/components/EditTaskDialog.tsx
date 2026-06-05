@@ -9,8 +9,7 @@ import { updateTask } from '@/app/actions';
 import { editTaskSchema } from '@/lib/validation';
 import type { EditTaskInput } from '@/lib/validation';
 import type { TaskData } from '@/lib/types';
-
-const TERMINATION_TYPES = ['ICANN', 'Self Termination', 'Termination for Cause'];
+import { TERMINATION_TYPES, normalizeTerminationType } from '@/lib/constants';
 
 const inputCls =
   'w-full px-3 py-2 rounded-md border border-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400 placeholder:text-zinc-400';
@@ -50,7 +49,7 @@ function taskToDefaults(task: TaskData): EditTaskInput {
     registrarName: task.registrarName,
     ianaId: task.ianaId,
     caseNumber: task.caseNumber,
-    terminationType: task.terminationType ?? '',
+    terminationType: normalizeTerminationType(task.terminationType),
     terminationEffectiveDate: toDateInput(task.terminationEffectiveDate),
     gainingRegistrarName: task.gainingRegistrarName ?? '',
     gainingRegistrarIanaId: task.gainingRegistrarIanaId ?? '',
@@ -86,7 +85,7 @@ export function EditTaskDialog({ task }: Props) {
   });
 
   const terminationType = watch('terminationType');
-  const showIcannNoticeDate = terminationType === 'ICANN';
+  const showIcannNoticeDate = terminationType === 'ICANN Termination';
 
   function handleOpen() {
     // Always reset to the latest task data when the dialog is opened
