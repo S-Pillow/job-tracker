@@ -16,10 +16,11 @@ interface Props {
   completedCount: number;   // total completed count from server (for badge)
 }
 
+// A task is active iff the backend cleared completedAt (reopen sets it to null).
+// Step completion state alone must never hide a task — a reopened task keeps its
+// checked steps but has completedAt = null and must appear as active.
 function isTaskComplete(task: TaskData): boolean {
-  if (task.completedAt !== null) return true;
-  const activeSteps = task.steps.filter((s) => s.status !== 'NA');
-  return activeSteps.length > 0 && activeSteps.every((s) => s.status === 'COMPLETE');
+  return task.completedAt !== null;
 }
 
 const TAB_CONFIG: { id: Tab; label: string }[] = [
