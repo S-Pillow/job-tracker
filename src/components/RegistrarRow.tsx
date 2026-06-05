@@ -134,7 +134,7 @@ export function RegistrarRow({ task, isExpanded, onToggle }: Props) {
 
           {/* Delete control */}
           {confirmDelete ? (
-            <>
+            <div className="flex items-center gap-1.5 bg-white pl-3 rounded">
               <span className="text-xs text-zinc-500 whitespace-nowrap">Delete?</span>
               <button
                 type="button"
@@ -151,7 +151,7 @@ export function RegistrarRow({ task, isExpanded, onToggle }: Props) {
               >
                 No
               </button>
-            </>
+            </div>
           ) : (
             <button
               type="button"
