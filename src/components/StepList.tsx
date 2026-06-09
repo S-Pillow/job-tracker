@@ -47,6 +47,29 @@ function interpolateStep11(
   return result;
 }
 
+/**
+ * Replace the static placeholders in Step 13's description with actual task values.
+ * Atomically replaces the full suffix "append 'ICANN TERMINATED (DDMMMYYYY)'" so the
+ * registrar name and formatted date are both substituted in one safe operation.
+ * Falls back to leaving the original text unchanged when registrarName is absent.
+ * When registrarName is present but effectiveDate is null, uses 'DDMMMYYYY' as the
+ * date token so the step remains readable with a clear unfilled placeholder.
+ */
+function interpolateStep13(
+  description: string,
+  registrarName: string | undefined,
+  effectiveDate: Date | null | undefined,
+): string {
+  if (!registrarName) return description;
+
+  const dateStr = effectiveDate ? formatYYYYMONDD(effectiveDate) : 'DDMMMYYYY';
+
+  return description.replace(
+    "append 'ICANN TERMINATED (DDMMMYYYY)'",
+    `use ${registrarName} + ICANN TERMINATED (${dateStr})`,
+  );
+}
+
 function getLockedByTitle(step: StepData, steps: StepData[]): string | null {
   const gateStep = steps.find(
     (s) => s.isGate && s.order < step.order && s.status !== 'COMPLETE',
@@ -82,14 +105,17 @@ export function StepList({
 
   const isTermination = taskType === 'TERMINATION';
 
-  // For termination tasks, replace placeholders in Step 11's description at render time.
-  // This keeps the stored description unchanged while showing actual task values.
+  // For termination tasks, replace placeholders in Step 11 and Step 13 descriptions at
+  // render time. This keeps stored descriptions unchanged while showing actual task values.
   const displaySteps = isTermination
-    ? steps.map((step) =>
-        step.order === 11 && step.description
-          ? { ...step, description: interpolateStep11(step.description, registrarName, terminationEffectiveDate) }
-          : step,
-      )
+    ? steps.map((step) => {
+        if (!step.description) return step;
+        if (step.order === 11)
+          return { ...step, description: interpolateStep11(step.description, registrarName, terminationEffectiveDate) };
+        if (step.order === 13)
+          return { ...step, description: interpolateStep13(step.description, registrarName, terminationEffectiveDate) };
+        return step;
+      })
     : steps;
 
   const primarySteps = isTermination
