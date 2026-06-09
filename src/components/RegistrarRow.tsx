@@ -204,7 +204,14 @@ export function RegistrarRow({ task, isExpanded, onToggle }: Props) {
               )}
             </div>
           )}
-          <StepList steps={task.steps} taskId={task.id} taskType={task.taskType} isTaskCompleted={isTaskCompleted} />
+          <StepList
+            steps={task.steps}
+            taskId={task.id}
+            taskType={task.taskType}
+            isTaskCompleted={isTaskCompleted}
+            registrarName={task.registrarName}
+            terminationEffectiveDate={task.terminationEffectiveDate}
+          />
         </div>
       )}
     </div>
