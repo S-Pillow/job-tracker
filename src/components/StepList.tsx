@@ -7,9 +7,45 @@ interface Props {
   taskId: string;
   taskType: TaskType;
   isTaskCompleted?: boolean;
+  registrarName?: string;
+  terminationEffectiveDate?: Date | null;
 }
 
 const TEARDOWN_START_ORDER = 11;
+
+const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'] as const;
+
+/** Format a date-only value as YYYY-MON-DD using UTC fields to avoid timezone shifts. */
+function formatYYYYMONDD(date: Date): string {
+  const y = date.getUTCFullYear();
+  const m = MONTHS[date.getUTCMonth()];
+  const d = String(date.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/**
+ * Replace the static placeholders in Step 11's description with actual task values.
+ * Uses very specific replacement strings so no other step text is accidentally changed.
+ * Falls back to leaving the placeholder as-is when a value is absent (e.g. older records).
+ */
+function interpolateStep11(
+  description: string,
+  registrarName: string | undefined,
+  effectiveDate: Date | null | undefined,
+): string {
+  let result = description;
+
+  if (registrarName) {
+    // Target: "... + Name (...)" — replace only the Name placeholder that follows "+ "
+    result = result.replace('+ Name (', `+ ${registrarName} (`);
+  }
+
+  if (effectiveDate) {
+    result = result.replace('YYYY-MON-DD', formatYYYYMONDD(effectiveDate));
+  }
+
+  return result;
+}
 
 function getLockedByTitle(step: StepData, steps: StepData[]): string | null {
   const gateStep = steps.find(
@@ -18,7 +54,14 @@ function getLockedByTitle(step: StepData, steps: StepData[]): string | null {
   return gateStep?.title ?? null;
 }
 
-export function StepList({ steps, taskId, taskType, isTaskCompleted = false }: Props) {
+export function StepList({
+  steps,
+  taskId,
+  taskType,
+  isTaskCompleted = false,
+  registrarName,
+  terminationEffectiveDate,
+}: Props) {
   if (steps.length === 0) {
     return (
       <div className="px-4 py-8 text-center text-zinc-400 dark:text-zinc-500">
@@ -38,11 +81,22 @@ export function StepList({ steps, taskId, taskType, isTaskCompleted = false }: P
   const allDone = completedCount === activeCount && activeCount > 0;
 
   const isTermination = taskType === 'TERMINATION';
-  const primarySteps = isTermination
-    ? steps.filter((s) => s.order < TEARDOWN_START_ORDER)
+
+  // For termination tasks, replace placeholders in Step 11's description at render time.
+  // This keeps the stored description unchanged while showing actual task values.
+  const displaySteps = isTermination
+    ? steps.map((step) =>
+        step.order === 11 && step.description
+          ? { ...step, description: interpolateStep11(step.description, registrarName, terminationEffectiveDate) }
+          : step,
+      )
     : steps;
+
+  const primarySteps = isTermination
+    ? displaySteps.filter((s) => s.order < TEARDOWN_START_ORDER)
+    : displaySteps;
   const teardownSteps = isTermination
-    ? steps.filter((s) => s.order >= TEARDOWN_START_ORDER)
+    ? displaySteps.filter((s) => s.order >= TEARDOWN_START_ORDER)
     : [];
 
   return (
